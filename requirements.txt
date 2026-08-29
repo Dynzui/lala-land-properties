@@ -1,0 +1,10 @@
+Django==6.0.8
+wagtail==7.4.3
+psycopg[binary]==3.3.4
+gunicorn==25.1.0
+django-two-factor-auth[phonenumberslite]==1.18.1
+
+# Development and test tooling
+pytest==8.4.2
+pytest-django==4.14.0
+ruff==0.13.3

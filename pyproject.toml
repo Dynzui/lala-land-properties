@@ -1,0 +1,37 @@
+[project]
+name = "lala-land-properties"
+version = "0.1.0"
+description = "Lala Land Properties public website and operations CMS"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "Django==6.0.8",
+    "wagtail==7.4.3",
+    "psycopg[binary]==3.3.4",
+    "gunicorn==25.1.0",
+    "django-two-factor-auth[phonenumberslite]==1.18.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.2",
+    "pytest-django==4.14.0",
+    "ruff==0.13.3",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "lala_land.settings.test"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["apps", "home"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "DJ", "UP"]
+ignore = ["DJ001", "F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
