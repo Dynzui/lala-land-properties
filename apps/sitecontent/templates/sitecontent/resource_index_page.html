@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}Practical homebuyer guides and real estate resources from Lala Land Properties.{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/resources.css' %}">{% endblock %}
+{% block content %}
+<main>
+    <header class="page-hero resource-hero">
+        <div><p class="eyebrow">Resources &amp; guides</p><h1>Learn before you<br><em>make your move.</em></h1></div>
+        <div class="resource-intro">{{ page.intro|richtext }}</div>
+    </header>
+    <nav class="category-filter" aria-label="Filter articles by category">
+        <a href="{{ page.url }}"{% if not selected_category %} aria-current="page"{% endif %}>All resources</a>
+        {% for category in categories %}<a href="{{ page.url }}?category={{ category.slug }}"{% if selected_category == category.slug %} aria-current="page"{% endif %}>{{ category.name }}</a>{% endfor %}
+    </nav>
+    <section class="article-grid" aria-label="Published resources">
+        {% for article in articles %}
+        <article class="article-card">
+            <a href="{{ article.url }}">
+                <div class="article-card-image">
+                    {% if article.cover_image %}{% image article.cover_image fill-900x600 as card_image %}<img src="{{ card_image.url }}" width="{{ card_image.width }}" height="{{ card_image.height }}" alt="{{ article.cover_alt_text }}" loading="lazy">{% endif %}
+                </div>
+                <div class="article-card-body">
+                    <p class="eyebrow">{{ article.category.name }} · {{ article.publication_date|date:"M j, Y" }}</p>
+                    <h2>{{ article.title }}</h2><p>{{ article.summary }}</p><span class="text-link">Read article <b>→</b></span>
+                </div>
+            </a>
+        </article>
+        {% empty %}
+        <div class="empty-state"><p class="eyebrow">Resource library</p><h2>No published articles <em>yet.</em></h2><p>Lala is preparing useful guidance for buyers and property seekers.</p><a class="button" href="/contact/">Ask Lala a question</a></div>
+        {% endfor %}
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}{{ page.summary }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/resources.css' %}">{% endblock %}
+{% block content %}
+<main class="article-page">
+    <header class="article-header">
+        <a class="back-link" href="{{ page.get_parent.url }}">← All resources</a>
+        <p class="eyebrow">{{ page.category.name }}</p><h1>{{ page.title }}</h1><p class="article-summary">{{ page.summary }}</p>
+        <div class="article-byline"><span>By {{ page.author_name }}</span><span>{{ page.publication_date|date:"F j, Y" }}</span></div>
+    </header>
+    {% if page.cover_image %}<figure class="article-cover">{% image page.cover_image width-1600 as cover %}<img src="{{ cover.url }}" width="{{ cover.width }}" height="{{ cover.height }}" alt="{{ page.cover_alt_text }}"></figure>{% endif %}
+    <article class="article-body">{{ page.body|richtext }}</article>
+    <aside class="article-cta"><p class="eyebrow light">Need personal guidance?</p><h2>Every property journey is <em>different.</em></h2><a class="button button-light" href="/contact/">Talk with Lala</a></aside>
+</main>
+{% endblock %}

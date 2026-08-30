@@ -58,4 +58,20 @@ class RoleAwareAuthenticationBackend(ModelBackend):
             action, _, _model_name = perm.removeprefix("media_library.").partition("_")
             if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
                 return action in {"add", "change", "view"}
+        if (
+            perm.startswith("sitecontent.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, _model_name = perm.removeprefix("sitecontent.").partition("_")
+            if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
+                return action in {"add", "change", "view"}
+        if (
+            perm.startswith("wagtailimages.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, _model_name = perm.removeprefix("wagtailimages.").partition("_")
+            if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
+                return action in {"add", "change", "view"}
         return super().has_perm(user_obj, perm, obj=obj)

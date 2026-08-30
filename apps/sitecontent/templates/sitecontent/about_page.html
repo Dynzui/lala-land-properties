@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}Meet Lala and learn about the honest, personalized approach behind Lala Land Properties.{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/about.css' %}">{% endblock %}
+{% block content %}
+<main class="about-page">
+    <header class="about-hero">
+        <div class="about-hero-copy">
+            <p class="eyebrow">{{ page.eyebrow }}</p>
+            <h1>{{ page.headline }}</h1>
+            <p class="about-lead">{{ page.introduction }}</p>
+            <p class="about-affiliation">{{ page.affiliation }}</p>
+        </div>
+        <div class="about-portrait">
+            {% if page.portrait %}
+                {% image page.portrait fill-1000x1250 as portrait_image %}
+                <img src="{{ portrait_image.url }}" width="{{ portrait_image.width }}" height="{{ portrait_image.height }}" alt="{{ page.portrait_alt_text }}">
+            {% else %}
+                <div class="portrait-placeholder"><span>Portrait coming soon</span><strong>Lala Land</strong></div>
+            {% endif %}
+        </div>
+    </header>
+    <section class="about-story section-pad">
+        <div><p class="eyebrow">The story</p><h2>Helping you move forward<br><em>with confidence.</em></h2></div>
+        <div class="rich-copy">{{ page.story|richtext }}</div>
+    </section>
+    <section class="about-philosophy section-pad">
+        <blockquote>“{{ page.philosophy_quote }}”</blockquote>
+        <div><p class="eyebrow light">The approach</p><div class="rich-copy light-copy">{{ page.approach|richtext }}</div></div>
+    </section>
+    <section class="about-community section-pad">
+        <div class="community-number">Local<br>knowledge</div>
+        <div><p class="eyebrow">Rooted in Negros Occidental</p><h2>More than a list<br><em>of properties.</em></h2><div class="rich-copy">{{ page.community|richtext }}</div></div>
+    </section>
+    <section class="about-cta">
+        <p class="eyebrow light">Start a conversation</p>
+        <h2>Tell Lala what you’re<br><em>looking for.</em></h2>
+        <p>No pressure—just a clearer way to understand your next step.</p>
+        <a class="button button-light" href="/contact/">Let’s talk</a>
+    </section>
+</main>
+{% endblock %}
