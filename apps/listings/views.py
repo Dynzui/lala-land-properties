@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from apps.media_library.services import media_for_listing
 
@@ -51,4 +52,4 @@ def listing_detail(request, slug):
 def listing_inquiry(request, listing_id):
     listing = get_object_or_404(Listing.objects.public(), pk=listing_id)
     query = urlencode({"listing": str(listing.pk), "property": listing.title})
-    return redirect(f"/contact/?{query}")
+    return redirect(f"{reverse('inquiries:contact')}?{query}")

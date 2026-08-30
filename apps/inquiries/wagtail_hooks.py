@@ -1,19 +1,35 @@
+from django.urls import path, reverse
 from wagtail import hooks
+from wagtail.admin.menu import MenuItem
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from apps.accounts.capabilities import Capability
 from apps.audittrail.models import AuditEvent
 
+from .admin_views import inquiry_dashboard, inquiry_detail
+from .forms import InquiryAdminForm
 from .models import Inquiry, InquiryNote
 
 
 class InquiryViewSet(SnippetViewSet):
     model = Inquiry
     icon = "mail"
-    list_display = ["name", "interest", "status", "assigned_to", "masked_phone", "created_at"]
+    list_display = [
+        "name",
+        "property_reference",
+        "interest",
+        "status",
+        "assignment_summary",
+        "contact_summary",
+        "created_at",
+    ]
     list_filter = ["status", "interest", "assigned_to"]
     search_fields = ["name", "email", "listing_title_snapshot", "message"]
     ordering = ["-created_at"]
+
+    def get_form_class(self, for_update=False):
+        return InquiryAdminForm
 
 
 class InquiryNoteViewSet(SnippetViewSet):
@@ -27,6 +43,33 @@ class InquiryNoteViewSet(SnippetViewSet):
 
 register_snippet(Inquiry, viewset=InquiryViewSet)
 register_snippet(InquiryNote, viewset=InquiryNoteViewSet)
+
+
+class InquiryDashboardMenuItem(MenuItem):
+    def is_shown(self, request):
+        return request.user.has_capability(Capability.INQUIRY_MANAGE)
+
+
+@hooks.register("register_admin_urls")
+def register_inquiry_admin_urls():
+    return [
+        path("inquiries/", inquiry_dashboard, name="lala_inquiry_dashboard"),
+        path(
+            "inquiries/<uuid:inquiry_id>/",
+            inquiry_detail,
+            name="lala_inquiry_detail",
+        ),
+    ]
+
+
+@hooks.register("register_admin_menu_item")
+def register_inquiry_dashboard_menu_item():
+    return InquiryDashboardMenuItem(
+        "Inquiry dashboard",
+        reverse("lala_inquiry_dashboard"),
+        icon_name="mail",
+        order=250,
+    )
 
 
 @hooks.register("before_create_snippet")

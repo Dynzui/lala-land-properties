@@ -6,7 +6,13 @@ from wagtail.models import GroupPagePermission
 
 from home.models import HomePage
 
-from .models import AboutPage, ArticleCategory, ArticlePage, ResourceIndexPage
+from .models import (
+    AboutPage,
+    ArticleCategory,
+    ArticlePage,
+    ResourceIndexPage,
+    SiteContactSettings,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -231,6 +237,23 @@ def test_customer_receives_no_editor_group():
     )
 
     assert not customer.groups.filter(name__startswith="Lala Land").exists()
+
+
+def test_social_contact_settings_are_singleton_and_render_when_configured(client):
+    settings = SiteContactSettings.objects.get(pk=1)
+    settings.facebook_url = "https://facebook.com/lalaland.example"
+    settings.instagram_url = "https://instagram.com/lalaland.example"
+    settings.save()
+
+    duplicate = SiteContactSettings(facebook_url="https://example.com/other")
+    with pytest.raises(ValidationError, match="already exist"):
+        duplicate.save()
+
+    assert SiteContactSettings.objects.count() == 1
+    response = client.get("/contact/")
+    assert response.status_code == 200
+    assert b"https://facebook.com/lalaland.example" in response.content
+    assert b"https://instagram.com/lalaland.example" in response.content
 
 
 def test_article_publication_date_falls_back_to_revision_timestamp():

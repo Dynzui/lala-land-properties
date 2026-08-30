@@ -38,7 +38,7 @@ class Inquiry(models.Model):
     )
     listing_title_snapshot = models.CharField(max_length=180, blank=True)
     name = models.CharField(max_length=120)
-    email = models.EmailField()
+    email = models.EmailField(blank=True)
     phone = models.CharField(max_length=32, blank=True)
     interest = models.CharField(max_length=20, choices=Interest.choices)
     preferred_location = models.CharField(max_length=160, blank=True)
@@ -88,6 +88,7 @@ class Inquiry(models.Model):
     def save(self, *args, **kwargs):
         self.email = self.email.strip().lower()
         self.name = self.name.strip()
+        self.phone = self.phone.strip()
         if self.listing_id and not self.listing_title_snapshot:
             self.listing_title_snapshot = self.listing.title
         if self.status == self.Status.ARCHIVED:
@@ -99,6 +100,12 @@ class Inquiry(models.Model):
 
     def clean(self):
         super().clean()
+        if not self.email and not self.phone:
+            raise ValidationError("Provide an email address or mobile number.")
+        if self.phone:
+            digits = "".join(character for character in self.phone if character.isdigit())
+            if not 7 <= len(digits) <= 15:
+                raise ValidationError({"phone": "Enter a valid mobile number."})
         if self.assigned_to_id and (
             self.assigned_to.status != self.assigned_to.Status.ACTIVE
             or self.assigned_to.role
@@ -112,6 +119,23 @@ class Inquiry(models.Model):
             return "Not provided"
         digits = "".join(character for character in self.phone if character.isdigit())
         return f"•••• ••• {digits[-4:]}" if len(digits) >= 4 else "••••"
+
+    @property
+    def property_reference(self) -> str:
+        return self.listing_title_snapshot or "General inquiry"
+
+    @property
+    def contact_summary(self) -> str:
+        methods = []
+        if self.email:
+            methods.append("Email")
+        if self.phone:
+            methods.append(f"Phone {self.masked_phone}")
+        return " + ".join(methods)
+
+    @property
+    def assignment_summary(self) -> str:
+        return str(self.assigned_to) if self.assigned_to_id else "Unassigned"
 
 
 class InquiryNote(models.Model):

@@ -44,7 +44,11 @@ def access_dashboard(request):
 def create_access_request(request):
     if request.user.role != User.Role.ADMIN:
         raise PermissionDenied
-    form = SensitiveAccessRequestForm(request.POST or None)
+    initial = {}
+    requested_scope = request.GET.get("scope")
+    if requested_scope in SensitiveAccessRequest.Scope.values:
+        initial["scope"] = requested_scope
+    form = SensitiveAccessRequestForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         request_sensitive_access(
             requester=request.user,

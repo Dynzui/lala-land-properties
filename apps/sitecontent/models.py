@@ -41,6 +41,35 @@ class ArticleCategory(models.Model):
         return super().save(*args, **kwargs)
 
 
+class SiteContactSettings(models.Model):
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    facebook_url = models.URLField(blank=True)
+    instagram_url = models.URLField(blank=True)
+    messenger_url = models.URLField(blank=True)
+    whatsapp_url = models.URLField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    panels = [
+        FieldPanel("facebook_url"),
+        FieldPanel("instagram_url"),
+        FieldPanel("messenger_url"),
+        FieldPanel("whatsapp_url"),
+    ]
+
+    class Meta:
+        verbose_name = "social contact settings"
+        verbose_name_plural = "social contact settings"
+
+    def __str__(self):
+        return "Lala Land social contact links"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        if self._state.adding and type(self).objects.filter(pk=1).exists():
+            raise ValidationError("Social contact settings already exist.")
+        return super().save(*args, **kwargs)
+
+
 class ResourceIndexPage(Page):
     intro = RichTextField(
         blank=True,

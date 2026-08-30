@@ -1,4 +1,5 @@
 import hashlib
+from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -16,12 +17,38 @@ from .models import Inquiry
 
 RATE_LIMIT = 5
 RATE_WINDOW_SECONDS = 60 * 60
+DUPLICATE_WINDOW_MINUTES = 10
 
 
 def _rate_key(request) -> str:
     address = request.META.get("REMOTE_ADDR", "unknown")
     digest = hashlib.sha256(address.encode()).hexdigest()
     return f"public-inquiry:{digest}"
+
+
+def _consume_rate_limit(request) -> bool:
+    rate_key = _rate_key(request)
+    if cache.add(rate_key, 1, RATE_WINDOW_SECONDS):
+        return True
+    try:
+        return cache.incr(rate_key) <= RATE_LIMIT
+    except ValueError:
+        cache.set(rate_key, 1, RATE_WINDOW_SECONDS)
+        return True
+
+
+def _recent_duplicate(inquiry):
+    return (
+        Inquiry.objects.filter(
+            created_at__gte=timezone.now() - timedelta(minutes=DUPLICATE_WINDOW_MINUTES),
+            listing=inquiry.listing,
+            email=inquiry.email,
+            phone=inquiry.phone,
+            message=inquiry.message,
+        )
+        .order_by("-created_at")
+        .first()
+    )
 
 
 def contact(request):
@@ -34,23 +61,32 @@ def contact(request):
     }
     form = PublicInquiryForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
-        rate_key = _rate_key(request)
-        submissions = cache.get(rate_key, 0)
-        if submissions >= RATE_LIMIT:
+        if not _consume_rate_limit(request):
             form.add_error(None, "Too many recent inquiries. Please try again later.")
         else:
             inquiry = form.save(commit=False)
             inquiry.listing = listing
             inquiry.listing_title_snapshot = listing.title if listing else ""
             inquiry.consent_given_at = timezone.now()
-            inquiry.save()
-            cache.set(rate_key, submissions + 1, RATE_WINDOW_SECONDS)
-            AuditEvent.objects.create(
-                action="inquiry.submitted",
-                target_type=inquiry._meta.label,
-                target_id=str(inquiry.pk),
-                metadata={"listing_id": str(listing.pk) if listing else None},
-            )
+            inquiry.email = inquiry.email.strip().lower()
+            inquiry.phone = inquiry.phone.strip()
+            inquiry.message = inquiry.message.strip()
+            duplicate = _recent_duplicate(inquiry)
+            if duplicate is None:
+                inquiry.save()
+                AuditEvent.objects.create(
+                    action="inquiry.submitted",
+                    target_type=inquiry._meta.label,
+                    target_id=str(inquiry.pk),
+                    metadata={"listing_id": str(listing.pk) if listing else None},
+                )
+            else:
+                inquiry = duplicate
+                AuditEvent.objects.create(
+                    action="inquiry.duplicate_suppressed",
+                    target_type=inquiry._meta.label,
+                    target_id=str(inquiry.pk),
+                )
             request.session["submitted_inquiry_id"] = str(inquiry.pk)
             return redirect("inquiries:success")
     return render(request, "inquiries/contact.html", {"form": form, "listing": listing})

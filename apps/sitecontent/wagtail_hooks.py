@@ -4,7 +4,7 @@ from wagtail.snippets.views.snippets import SnippetViewSet
 
 from apps.audittrail.models import AuditEvent
 
-from .models import AboutPage, ArticleCategory, ArticlePage
+from .models import AboutPage, ArticleCategory, ArticlePage, SiteContactSettings
 
 
 def request_actor(request):
@@ -22,6 +22,7 @@ class ArticleCategoryViewSet(SnippetViewSet):
 
 
 register_snippet(ArticleCategory, viewset=ArticleCategoryViewSet)
+register_snippet(SiteContactSettings)
 
 
 @hooks.register("after_create_snippet")
@@ -34,6 +35,13 @@ def audit_category_create(request, instance):
             target_id=str(instance.pk),
             metadata={"name": instance.name},
         )
+    elif isinstance(instance, SiteContactSettings):
+        AuditEvent.objects.create(
+            actor=request_actor(request),
+            action="site.contact_settings.created",
+            target_type=instance._meta.label,
+            target_id=str(instance.pk),
+        )
 
 
 @hooks.register("after_edit_snippet")
@@ -45,6 +53,13 @@ def audit_category_edit(request, instance):
             target_type=instance._meta.label,
             target_id=str(instance.pk),
             metadata={"name": instance.name, "active": instance.active},
+        )
+    elif isinstance(instance, SiteContactSettings):
+        AuditEvent.objects.create(
+            actor=request_actor(request),
+            action="site.contact_settings.updated",
+            target_type=instance._meta.label,
+            target_id=str(instance.pk),
         )
 
 
