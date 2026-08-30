@@ -43,7 +43,7 @@ class ActiveAccountMiddleware:
 class StaffMFARequiredMiddleware:
     """Require a verified OTP device before either administration surface."""
 
-    protected_prefixes = ("/admin/", "/django-admin/")
+    protected_prefixes = ("/admin/", "/django-admin/", "/staff/")
 
     def __init__(self, get_response):
         self.get_response = get_response

@@ -72,3 +72,16 @@ def test_only_owner_and_admin_receive_wagtail_admin_permission():
     assert owner.has_perm("wagtailadmin.access_admin")
     assert admin.has_perm("wagtailadmin.access_admin")
     assert not maintainer.has_perm("wagtailadmin.access_admin")
+
+
+def test_property_permissions_keep_private_locations_owner_only():
+    user_model = get_user_model()
+    owner = create_user(username="property-owner", role=user_model.Role.OWNER)
+    admin = create_user(username="property-admin", role=user_model.Role.ADMIN)
+
+    assert owner.has_perm("properties.change_location")
+    assert admin.has_perm("properties.view_location")
+    assert not admin.has_perm("properties.change_location")
+    assert owner.has_perm("properties.change_property")
+    assert admin.has_perm("properties.change_property")
+    assert not owner.has_perm("properties.delete_property")

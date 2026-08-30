@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>Private exact location</h1>
+    <p>{{ location.public_label }}</p>
+    <dl>
+        <dt>Street address</dt><dd>{{ location.street_address_private|default:"Not recorded" }}</dd>
+        <dt>Latitude</dt><dd>{{ location.latitude_private|default:"Not recorded" }}</dd>
+        <dt>Longitude</dt><dd>{{ location.longitude_private|default:"Not recorded" }}</dd>
+    </dl>
+    <p>This information is private. Access is logged and may expire.</p>
+</main>
+{% endblock %}

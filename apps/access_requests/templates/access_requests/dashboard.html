@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+    <h1>Sensitive access</h1>
+    {% if request.user.role == "ADMIN" %}
+        <p><a href="{% url 'access_requests:request' %}">Request access</a></p>
+    {% endif %}
+
+    <h2>Requests</h2>
+    <ul>
+        {% for item in access_requests %}
+            <li>
+                {{ item.requester }} — {{ item.get_scope_display }} — {{ item.get_status_display }}
+                {% if request.user.role == "OWNER" and item.status == "PENDING" %}
+                    <form method="post" action="{% url 'access_requests:review' item.pk 'approve' %}">
+                        {% csrf_token %}<button type="submit">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'access_requests:review' item.pk 'deny' %}">
+                        {% csrf_token %}<button type="submit">Deny</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}<li>No requests.</li>{% endfor %}
+    </ul>
+
+    <h2>Grants</h2>
+    <ul>
+        {% for grant in grants %}
+            <li>
+                {{ grant.grantee }} — {{ grant.get_scope_display }} — expires {{ grant.expires_at }}
+                {% if request.user.role == "OWNER" and not grant.revoked_at %}
+                    <form method="post" action="{% url 'access_requests:revoke' grant.pk %}">
+                        {% csrf_token %}<button type="submit">Revoke</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}<li>No grants.</li>{% endfor %}
+    </ul>
+</main>
+{% endblock %}

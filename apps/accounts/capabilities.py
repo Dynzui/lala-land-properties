@@ -7,6 +7,7 @@ class Capability:
     STAFF_MANAGE = "staff.manage"
     LISTING_MANAGE = "listing.manage"
     LISTING_PUBLISH = "listing.publish"
+    PROPERTY_MANAGE = "property.manage"
     INQUIRY_MANAGE = "inquiry.manage"
     ARTICLE_MANAGE = "article.manage"
     GLOBAL_CONTENT_MANAGE = "global_content.manage"
@@ -23,6 +24,7 @@ ROLE_CAPABILITIES: Mapping[str, frozenset[str]] = {
             Capability.STAFF_MANAGE,
             Capability.LISTING_MANAGE,
             Capability.LISTING_PUBLISH,
+            Capability.PROPERTY_MANAGE,
             Capability.INQUIRY_MANAGE,
             Capability.ARTICLE_MANAGE,
             Capability.GLOBAL_CONTENT_MANAGE,
@@ -37,6 +39,7 @@ ROLE_CAPABILITIES: Mapping[str, frozenset[str]] = {
         {
             Capability.LISTING_MANAGE,
             Capability.LISTING_PUBLISH,
+            Capability.PROPERTY_MANAGE,
             Capability.INQUIRY_MANAGE,
             Capability.ARTICLE_MANAGE,
         }

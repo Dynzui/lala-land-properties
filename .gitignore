@@ -12,8 +12,8 @@ __pycache__/
 .coverage
 htmlcov/
 media/
-static/
-staticfiles/
+/static/
+/staticfiles/
 *.log
 .idea/
 .vscode/

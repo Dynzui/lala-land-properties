@@ -20,4 +20,42 @@ class RoleAwareAuthenticationBackend(ModelBackend):
             and user_obj.status == User.Status.ACTIVE
         ):
             return user_obj.role in {User.Role.OWNER, User.Role.ADMIN}
+        if (
+            perm.startswith("properties.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, model_name = perm.removeprefix("properties.").partition("_")
+            if action == "delete":
+                return False
+            if user_obj.role == User.Role.OWNER:
+                return action in {"add", "change", "view"}
+            if user_obj.role == User.Role.ADMIN:
+                if model_name == "location":
+                    return action == "view"
+                return action in {"add", "change", "view"}
+        if (
+            perm.startswith("listings.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, _model_name = perm.removeprefix("listings.").partition("_")
+            if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
+                return action in {"add", "change", "view"}
+        if (
+            perm.startswith("inquiries.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, _model_name = perm.removeprefix("inquiries.").partition("_")
+            if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
+                return action in {"add", "change", "view"}
+        if (
+            perm.startswith("media_library.")
+            and user_obj.is_authenticated
+            and user_obj.status == User.Status.ACTIVE
+        ):
+            action, _, _model_name = perm.removeprefix("media_library.").partition("_")
+            if user_obj.role in {User.Role.OWNER, User.Role.ADMIN}:
+                return action in {"add", "change", "view"}
         return super().has_perm(user_obj, perm, obj=obj)
