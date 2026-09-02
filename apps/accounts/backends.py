@@ -27,12 +27,10 @@ class RoleAwareAuthenticationBackend(ModelBackend):
         ):
             action, _, model_name = perm.removeprefix("properties.").partition("_")
             if action == "delete":
-                return False
+                return user_obj.role == User.Role.OWNER and model_name == "location"
             if user_obj.role == User.Role.OWNER:
                 return action in {"add", "change", "view"}
             if user_obj.role == User.Role.ADMIN:
-                if model_name == "location":
-                    return action == "view"
                 return action in {"add", "change", "view"}
         if (
             perm.startswith("listings.")

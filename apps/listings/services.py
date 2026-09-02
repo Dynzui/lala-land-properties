@@ -124,6 +124,27 @@ def archive_listing(*, actor: User, listing: Listing) -> Listing:
 
 
 @transaction.atomic
+def restore_listing(*, actor: User, listing: Listing) -> Listing:
+    """Restore an archived listing as a draft so it can be reviewed before republishing."""
+    if not actor.has_capability(Capability.LISTING_MANAGE):
+        raise PermissionDenied("Restoring requires Owner or Admin access.")
+    listing = Listing.objects.select_for_update().get(pk=listing.pk)
+    if listing.workflow_status != Listing.WorkflowStatus.ARCHIVED:
+        raise ValidationError({"workflow_status": "Only archived listings can be restored."})
+    before = serialize_record(listing)
+    listing.workflow_status = Listing.WorkflowStatus.DRAFT
+    listing.archived_at = None
+    listing.save()
+    record_listing_change(
+        actor=actor,
+        record=listing,
+        action="listing.restored",
+        before=before,
+    )
+    return listing
+
+
+@transaction.atomic
 def set_public_status(*, actor: User, listing: Listing, status: str) -> Listing:
     if not actor.has_capability(Capability.LISTING_MANAGE):
         raise PermissionDenied("Status changes require Owner or Admin access.")

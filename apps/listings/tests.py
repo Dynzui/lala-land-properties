@@ -10,7 +10,7 @@ from apps.audittrail.models import AuditEvent
 from apps.properties.models import Development, Location, Property, PropertyType, Variant
 
 from .models import Listing, Offer
-from .services import archive_listing, publish_listing, set_public_status
+from .services import archive_listing, publish_listing, restore_listing, set_public_status
 
 pytestmark = pytest.mark.django_db
 
@@ -28,8 +28,9 @@ def make_owner():
 
 def make_catalogue(*, hidden=False):
     location = Location.objects.create(
-        city_municipality="Bacolod",
-        province="Negros Occidental",
+        region="Negros Island Region (NIR)",
+        city_municipality="City of Bacolod",
+        province="",
         public_label="Bacolod City, Negros Occidental",
         visibility=Location.Visibility.HIDDEN if hidden else Location.Visibility.AREA_ONLY,
     )
@@ -103,6 +104,43 @@ def test_listing_requires_exactly_one_matching_target():
 
     with pytest.raises(ValidationError):
         listing.save()
+
+
+def test_pooled_listing_explains_required_variant_and_quantity():
+    listing = Listing(
+        slug="missing-pooled-target",
+        title="Missing pooled target",
+        summary="Summary",
+        description="Description",
+        inventory_mode=Listing.InventoryMode.POOLED,
+    )
+
+    with pytest.raises(ValidationError) as error:
+        listing.full_clean()
+
+    assert error.value.message_dict["variant"] == [
+        "Choose the development variant represented by this listing."
+    ]
+    assert error.value.message_dict["available_quantity"] == [
+        "Enter how many units of this variant are available."
+    ]
+
+
+def test_single_listing_explains_required_property():
+    listing = Listing(
+        slug="missing-single-target",
+        title="Missing single target",
+        summary="Summary",
+        description="Description",
+        inventory_mode=Listing.InventoryMode.SINGLE,
+    )
+
+    with pytest.raises(ValidationError) as error:
+        listing.full_clean()
+
+    assert error.value.message_dict["property"] == [
+        "Choose the individual property represented by this listing."
+    ]
 
 
 def test_pooled_quantity_is_never_exposed_publicly():
@@ -248,3 +286,79 @@ def test_inquiry_link_tags_listing_and_routes_to_contact(client):
     assert response.status_code == 302
     assert response.url.startswith("/contact/?")
     assert str(listing.pk) in response.url
+
+
+def test_public_property_search_filters_sale_location_type_bedrooms_and_price(client):
+    location, _, property_record = make_catalogue()
+    property_record.bedrooms = 3
+    property_record.save()
+    listing = make_listing(property_record=property_record)
+    make_offer(listing, price_min=Decimal("3500000"))
+    listing = publish_listing(actor=make_owner(), listing=listing)
+
+    response = client.get(
+        reverse("listings:index"),
+        {
+            "transaction": "SALE",
+            "property_type": property_record.property_type.slug,
+            "region": "Negros Island Region (NIR)",
+            "province": "__independent__",
+            "city_municipality": "City of Bacolod",
+            "bedrooms": "3",
+            "min_price": "3000000",
+            "max_price": "4000000",
+        },
+    )
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert listing.title in content
+    assert "₱3,500,000" in content
+
+
+def test_public_property_search_rejects_reversed_price_range(client):
+    response = client.get(
+        reverse("listings:index"),
+        {"min_price": "5000000", "max_price": "1000000"},
+    )
+
+    assert response.status_code == 200
+    assert "Please check the price range" in response.content.decode()
+
+
+def test_offer_formats_php_rental_and_range_prices():
+    _, _, property_record = make_catalogue()
+    rental_listing = make_listing(property_record=property_record)
+    rental = make_offer(
+        rental_listing,
+        transaction_type=Offer.TransactionType.RENT,
+        price_min=Decimal("25000"),
+        rent_period=Offer.RentPeriod.MONTHLY,
+    )
+    assert rental.display_price == "₱25,000 / monthly"
+
+    rental.active = False
+    rental.save()
+    price_range = Offer.objects.create(
+        listing=rental_listing,
+        transaction_type=Offer.TransactionType.SALE,
+        price_display=Offer.PriceDisplay.RANGE,
+        price_min=Decimal("3000000"),
+        price_max=Decimal("4500000"),
+    )
+    assert price_range.display_price == "₱3,000,000–₱4,500,000"
+
+
+def test_archived_listing_can_be_restored_as_audited_draft():
+    _, _, property_record = make_catalogue()
+    owner = make_owner()
+    listing = make_listing(property_record=property_record)
+    make_offer(listing)
+    listing = publish_listing(actor=owner, listing=listing)
+    listing = archive_listing(actor=owner, listing=listing)
+
+    restored = restore_listing(actor=owner, listing=listing)
+
+    assert restored.workflow_status == Listing.WorkflowStatus.DRAFT
+    assert restored.archived_at is None
+    assert AuditEvent.objects.filter(action="listing.restored", target_id=str(listing.pk)).exists()

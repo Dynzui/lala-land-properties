@@ -1,2 +1,51 @@
-{% extends "base.html" %}{% load wagtailimages_tags %}{% block title %}Properties{% endblock %}{% block meta_description %}Explore homes and properties available through Lala Land Properties in Negros Occidental.{% endblock %}
-{% block content %}<main><header class="page-hero"><div><p class="eyebrow">Properties</p><h1>Find a place<br>to call <em>home.</em></h1></div><p>Explore homes, lots, and developments selected with honest guidance and clear information. New opportunities are added as they become available.</p></header><section class="listing-grid" aria-label="Available properties">{% for listing in listings %}<article class="listing-card"><a href="{% url 'listings:detail' listing.slug %}"><div class="listing-card-image">{% if listing.card_media %}{% image listing.card_media.image fill-720x480 as card_image %}<img src="{{ card_image.url }}" width="{{ card_image.width }}" height="{{ card_image.height }}" alt="{{ listing.card_media.alt_text }}" loading="lazy">{% endif %}<span class="status-pill">{{ listing.get_public_status_display }}</span></div><div class="listing-card-body"><p class="eyebrow">{{ listing.public_location.public_label }}</p><h2>{{ listing.title }}</h2><p>{{ listing.summary }}</p><span class="text-link">View property <b>→</b></span></div></a></article>{% empty %}<div class="empty-state"><p class="eyebrow">The collection is growing</p><h2>No properties are available <em>right now.</em></h2><p>Tell Lala what you are looking for and she can keep your needs in mind.</p><a class="button" href="/contact/">Tell me what you need</a></div>{% endfor %}</section></main>{% endblock %}
+{% extends "base.html" %}{% load wagtailimages_tags %}
+{% load static %}{% block title %}Properties{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/properties.css' %}">{% endblock %}
+{% block meta_description %}Explore homes and properties available through Lala Land Properties in Negros Occidental.{% endblock %}
+{% block content %}
+<main>
+  <header class="page-hero property-search-hero">
+    <div><p class="eyebrow">Properties</p><h1>Find a place<br>to call <em>home.</em></h1></div>
+    <p>Explore homes, lots, and developments selected with honest guidance and clear information.</p>
+  </header>
+  <section class="property-search" aria-labelledby="search-heading">
+    <div class="search-heading"><div><p class="eyebrow">Property search</p><h2 id="search-heading">Narrow the <em>collection.</em></h2></div><p>{{ listings|length }} match{{ listings|length|pluralize:"es" }}</p></div>
+    <form class="property-filter" method="get">
+      <div><label for="{{ filter_form.transaction.id_for_label }}">Looking for</label>{{ filter_form.transaction }}</div>
+      <div><label for="{{ filter_form.property_type.id_for_label }}">Property type</label>{{ filter_form.property_type }}</div>
+      <div><label for="{{ filter_form.region.id_for_label }}">Region</label>{{ filter_form.region }}</div>
+      <div><label for="{{ filter_form.province.id_for_label }}">Province</label>{{ filter_form.province }}</div>
+      <div><label for="{{ filter_form.city_municipality.id_for_label }}">City / municipality</label>{{ filter_form.city_municipality }}</div>
+      <div><label for="{{ filter_form.bedrooms.id_for_label }}">Bedrooms</label>{{ filter_form.bedrooms }}</div>
+      <div><label for="{{ filter_form.min_price.id_for_label }}">Minimum price (₱)</label>{{ filter_form.min_price }}</div>
+      <div><label for="{{ filter_form.max_price.id_for_label }}">Maximum price (₱)</label>{{ filter_form.max_price }}</div>
+      <div><label for="{{ filter_form.status.id_for_label }}">Availability</label>{{ filter_form.status }}</div>
+      <div class="filter-actions"><button class="button" type="submit">Search properties</button>{% if has_filters %}<a href="{% url 'listings:index' %}">Clear filters</a>{% endif %}</div>
+      {% if filter_form.errors %}<div class="filter-errors" role="alert">Please check the price range and try again.</div>{% endif %}
+    </form>
+  </section>
+  <section class="listing-grid" aria-label="Property search results">
+    {% for listing in listings %}
+    <article class="listing-card">
+      <a href="{% url 'listings:detail' listing.slug %}">
+        <div class="listing-card-image">
+          {% if listing.card_media %}{% image listing.card_media.image fill-720x480 as card_image %}<img src="{{ card_image.url }}" width="{{ card_image.width }}" height="{{ card_image.height }}" alt="{{ listing.card_media.alt_text }}" loading="lazy">{% endif %}
+          <span class="status-pill">{{ listing.get_public_status_display }}</span>
+        </div>
+        <div class="listing-card-body">
+          <p class="eyebrow">{{ listing.public_location.public_label }}</p>
+          <h2>{{ listing.title }}</h2>
+          <div class="card-facts"><span>{{ listing.property_type_label }}</span>{% if listing.bedrooms_label is not None %}<span>{{ listing.bedrooms_label }} bed{{ listing.bedrooms_label|pluralize }}</span>{% endif %}</div>
+          {% if listing.active_offer %}<p class="listing-price">{{ listing.active_offer.display_price }}</p>{% endif %}
+          <p>{{ listing.summary }}</p>
+          <span class="text-link">View property <b>→</b></span>
+        </div>
+      </a>
+    </article>
+    {% empty %}
+    <div class="empty-state"><p class="eyebrow">No exact matches</p><h2>Let’s find another <em>way forward.</em></h2><p>Try widening your filters, or tell Lala what you need and she can help personally.</p><div class="button-row"><a class="button" href="{% url 'listings:index' %}">Clear filters</a><a class="text-link" href="/contact/">Tell me what you need →</a></div></div>
+    {% endfor %}
+  </section>
+</main>
+<script src="{% static 'js/philippine-geography.js' %}" defer></script>
+{% endblock %}

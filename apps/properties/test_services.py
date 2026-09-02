@@ -15,7 +15,6 @@ from .services import (
 
 pytestmark = pytest.mark.django_db
 
-
 def make_owner():
     user_model = get_user_model()
     return user_model.objects.create_user(
@@ -109,6 +108,69 @@ def test_archive_and_reactivate_preserve_record_for_reuse():
     assert development.status == Development.Status.DRAFT
     assert development.archived_at is None
     assert Development.objects.filter(pk=development.pk).exists()
+
+
+def test_development_archive_is_blocked_until_published_listings_are_archived():
+    from apps.listings.models import Listing, Offer
+
+    owner = make_owner()
+    location, property_type, development = make_catalogue()
+    variant = Variant.objects.create(
+        development=development,
+        property_type=property_type,
+        name="Archive Guard Variant",
+        slug="archive-guard-variant",
+        description="Archive guard variant.",
+        status=Variant.Status.ACTIVE,
+    )
+    property_record = Property.objects.create(
+        development=development,
+        variant=variant,
+        property_type=property_type,
+        location=location,
+        reference_code="ARCHIVE-GUARD-001",
+    )
+    listing = Listing.objects.create(
+        property=property_record,
+        title="Archive Guard Listing",
+        slug="archive-guard-listing",
+        summary="Archive guard listing.",
+        description="Archive guard listing.",
+        inventory_mode=Listing.InventoryMode.SINGLE,
+    )
+    Offer.objects.create(
+        listing=listing,
+        transaction_type=Offer.TransactionType.SALE,
+        price_display=Offer.PriceDisplay.EXACT,
+        price_min=1000000,
+    )
+    listing.workflow_status = Listing.WorkflowStatus.PUBLISHED
+    listing.save()
+
+    with pytest.raises(ValidationError) as error:
+        archive_catalog_record(actor=owner, record=development)
+
+    message = error.value.message_dict["status"][0]
+    assert "Archive Guard Listing" in message
+    assert "Archive Guard Variant" in message
+    assert "ARCHIVE-GUARD-001" in message
+    development.refresh_from_db()
+    variant.refresh_from_db()
+    property_record.refresh_from_db()
+    assert development.status == Development.Status.ACTIVE
+    assert variant.status == Variant.Status.ACTIVE
+    assert property_record.archived_at is None
+
+    listing.workflow_status = Listing.WorkflowStatus.ARCHIVED
+    listing.save()
+    archive_catalog_record(actor=owner, record=development)
+
+    development.refresh_from_db()
+    variant.refresh_from_db()
+    property_record.refresh_from_db()
+    assert development.status == Development.Status.ARCHIVED
+    assert variant.status == Variant.Status.ACTIVE
+    assert property_record.archived_at is None
 
 
 def test_archived_development_cannot_receive_active_variant_or_new_property():

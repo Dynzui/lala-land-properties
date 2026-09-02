@@ -6,6 +6,7 @@ from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
+from apps.properties.views import geography_data
 from search import views as search_views
 
 urlpatterns = [
@@ -18,11 +19,13 @@ urlpatterns = [
     ),
     path("django-admin/", admin.site.urls),
     path("staff/access/", include("apps.access_requests.urls")),
+    path("staff/", include("apps.accounts.urls")),
     path("properties/", include("apps.listings.urls")),
     path("contact/", include("apps.inquiries.urls")),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),
+    path("geography/", geography_data, name="philippine_geography"),
 ]
 
 

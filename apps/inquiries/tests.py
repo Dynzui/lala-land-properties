@@ -235,6 +235,37 @@ def test_internal_note_records_author_and_audit_event():
     assert AuditEvent.objects.filter(action="inquiry.note.created").exists()
 
 
+def test_cms_note_creation_automatically_uses_signed_in_staff_as_author(client):
+    user_model = get_user_model()
+    owner = make_user(user_model.Role.OWNER, "cms-note-owner")
+    inquiry = Inquiry.objects.create(
+        name="CMS Note Lead",
+        email="cms-note@example.test",
+        interest=Inquiry.Interest.EXPLORING,
+        message="Please follow up.",
+        consent_given_at=timezone.now(),
+    )
+    force_verified_login(client, owner)
+
+    response = client.post(
+        reverse("wagtailsnippets_inquiries_inquirynote:add"),
+        {
+            "inquiry": str(inquiry.pk),
+            "kind": InquiryNote.Kind.CALL,
+            "body": "Called and discussed preferred locations.",
+            "occurred_at": timezone.now().strftime("%Y-%m-%d %H:%M"),
+        },
+    )
+
+    assert response.status_code == 302
+    note = InquiryNote.objects.get(inquiry=inquiry)
+    assert note.author == owner
+    assert AuditEvent.objects.filter(
+        action="inquiry.note.created",
+        metadata__note_id=str(note.pk),
+    ).exists()
+
+
 def test_inquiry_dashboard_shows_operational_counts_and_masks_phone(client):
     user_model = get_user_model()
     owner = make_user(user_model.Role.OWNER, "dashboard-owner")

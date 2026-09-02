@@ -1,10 +1,15 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models.deletion import ProtectedError
+
+from apps.audittrail.models import AuditEvent
 
 from .models import Development, Location, Property, PropertyType, Variant
+from .widgets import MapCoordinateWidget
 
 pytestmark = pytest.mark.django_db
 
@@ -216,3 +221,124 @@ def test_postgresql_rejects_out_of_range_coordinates_when_validation_is_bypassed
                 )
             ]
         )
+
+
+def test_map_coordinate_widget_uses_hidden_storage_and_clickable_picker():
+    widget = MapCoordinateWidget(map_name="public", axis="latitude")
+
+    rendered = widget.render("public_latitude", Decimal("10.676500"), {"id": "id_public_latitude"})
+
+    assert 'type="hidden"' in rendered
+    assert 'data-map-picker="public"' in rendered
+    assert "Click the map" in rendered
+
+
+def test_location_admin_form_hides_private_fields_from_admin_but_not_owner():
+    from django.contrib.auth import get_user_model
+
+    from .forms import LocationAdminForm
+
+    user_model = get_user_model()
+    admin = user_model(
+        username="location-admin", email="location-admin@example.test", role=user_model.Role.ADMIN
+    )
+    owner = user_model(
+        username="location-owner", email="location-owner@example.test", role=user_model.Role.OWNER
+    )
+
+    admin_form = LocationAdminForm(for_user=admin)
+    owner_form = LocationAdminForm(for_user=owner)
+
+    assert "street_address_private" not in admin_form.fields
+    assert "latitude_private" not in admin_form.fields
+    assert "longitude_private" not in admin_form.fields
+    assert "street_address_private" in owner_form.fields
+
+
+def test_psgc_dataset_and_public_endpoint_include_full_hierarchy(client):
+    from django.urls import reverse
+
+    from .geography import psgc_data, validate_geography
+
+    data = psgc_data()
+    assert len(data["regions"]) == 18
+    assert validate_geography("Negros Island Region (NIR)", "Negros Occidental", "City of Talisay")
+    assert validate_geography("Negros Island Region (NIR)", "__independent__", "City of Bacolod")
+
+    response = client.get(reverse("philippine_geography"))
+    assert response.status_code == 200
+    assert response.json()["version"] == "PSGC 2Q 2026"
+
+
+def test_location_admin_form_rejects_mismatched_geography():
+    from django.contrib.auth import get_user_model
+
+    from .forms import LocationAdminForm
+
+    user_model = get_user_model()
+    owner = user_model(
+        username="geo-owner", email="geo-owner@example.test", role=user_model.Role.OWNER
+    )
+    form = LocationAdminForm(
+        data={
+            "country_code": "PH",
+            "region": "Negros Island Region (NIR)",
+            "province": "Negros Occidental",
+            "city_municipality": "City of Cebu",
+            "public_label": "Invalid pairing",
+            "visibility": Location.Visibility.AREA_ONLY,
+        },
+        for_user=owner,
+    )
+
+    assert not form.is_valid()
+    assert "city_municipality" in form.errors
+
+
+def test_unused_location_can_be_deleted_but_referenced_location_is_protected():
+    unused = make_location(public_label="Unused location")
+    unused_id = unused.pk
+    unused.delete()
+    assert not Location.objects.filter(pk=unused_id).exists()
+
+    referenced = make_location(public_label="Referenced location")
+    Development.objects.create(
+        location=referenced,
+        name="Protected development",
+        slug="protected-development",
+        development_type=Development.Type.SUBDIVISION,
+        summary="Protected by its location relationship.",
+        description="Protected development description.",
+    )
+    with pytest.raises(ProtectedError):
+        referenced.delete()
+
+
+def test_successful_location_deletion_is_audited_without_private_details():
+    from types import SimpleNamespace
+
+    from .wagtail_hooks import audit_location_deletions, capture_location_deletions
+
+    user_model = get_user_model()
+    owner = user_model.objects.create_user(
+        username="delete-owner",
+        email="delete-owner@example.test",
+        password="safe-test-password",
+        role=user_model.Role.OWNER,
+        status=user_model.Status.ACTIVE,
+    )
+    location = make_location(
+        public_label="Disposable location",
+        street_address_private="Do not log this address",
+    )
+    location_id = str(location.pk)
+    request = SimpleNamespace(user=owner)
+
+    capture_location_deletions(request, [location])
+    location.delete()
+    audit_location_deletions(request, [location])
+
+    event = AuditEvent.objects.get(action="catalogue.location.deleted", target_id=location_id)
+    assert event.actor == owner
+    assert event.metadata["public_label"] == "Disposable location"
+    assert "street_address_private" not in event.metadata

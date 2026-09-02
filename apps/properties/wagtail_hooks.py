@@ -1,7 +1,12 @@
+from django.contrib import messages
+from django.shortcuts import redirect
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from apps.audittrail.models import AuditEvent
+
+from .forms import LocationAdminForm
 from .models import Development, Location, Property, PropertyType, Variant
 from .services import record_catalog_change, serialize_catalog_record
 
@@ -25,6 +30,9 @@ class LocationViewSet(SnippetViewSet):
     search_fields = ["public_label", "city_municipality", "province", "barangay"]
     ordering = ["province", "city_municipality", "public_label"]
 
+    def get_form_class(self, for_update=False):
+        return LocationAdminForm
+
 
 class DevelopmentViewSet(SnippetViewSet):
     model = Development
@@ -33,7 +41,6 @@ class DevelopmentViewSet(SnippetViewSet):
     list_filter = ["development_type", "status"]
     search_fields = ["name", "summary", "developer_name"]
     ordering = ["name"]
-
 
 class VariantViewSet(SnippetViewSet):
     model = Variant
@@ -68,6 +75,24 @@ register_snippet(Property, viewset=PropertyViewSet)
 
 @hooks.register("before_edit_snippet")
 def capture_catalogue_before_edit(request, instance):
+    if isinstance(instance, Development) and request.method == "POST":
+        requested_status = request.POST.get("status")
+        if (
+            instance.status != Development.Status.ARCHIVED
+            and requested_status == Development.Status.ARCHIVED
+        ):
+            blocker = instance.archive_blocker_message()
+            if blocker:
+                messages.error(request, blocker)
+                return redirect(request.path)
+        if (
+            instance.status == Development.Status.ARCHIVED
+            and requested_status != Development.Status.ARCHIVED
+        ):
+            mutable_post = request.POST.copy()
+            mutable_post["status"] = Development.Status.DRAFT
+            request.POST = mutable_post
+            instance.archived_at = None
     if isinstance(instance, CATALOG_MODELS):
         request._lala_catalogue_before = serialize_catalog_record(instance)
 
@@ -86,10 +111,55 @@ def audit_catalogue_create(request, instance):
 @hooks.register("after_edit_snippet")
 def audit_catalogue_edit(request, instance):
     if isinstance(instance, CATALOG_MODELS):
+        before = getattr(request, "_lala_catalogue_before", None)
+        action = "catalogue.record.updated"
+        summary = "Updated through Wagtail"
+        if isinstance(instance, Development) and before:
+            previous_status = before.get("status")
+            if (
+                previous_status != Development.Status.ARCHIVED
+                and instance.status == Development.Status.ARCHIVED
+            ):
+                action = "catalogue.development.archived"
+                summary = "Archived through Wagtail; dependent records were left unchanged"
+            elif (
+                previous_status == Development.Status.ARCHIVED
+                and instance.status != Development.Status.ARCHIVED
+            ):
+                action = "catalogue.development.restored"
+                summary = "Restored through Wagtail; dependent listings remain unpublished"
         record_catalog_change(
             actor=request.user,
             record=instance,
-            action="catalogue.record.updated",
-            before=getattr(request, "_lala_catalogue_before", None),
-            change_summary="Updated through Wagtail",
+            action=action,
+            before=before,
+            change_summary=summary,
+        )
+
+
+@hooks.register("before_delete_snippet")
+def capture_location_deletions(request, instances):
+    """Keep non-sensitive identifiers because Django clears PKs after deletion."""
+    request._lala_location_deletions = [
+        {
+            "target_id": str(instance.pk),
+            "public_label": instance.public_label,
+            "region": instance.region,
+            "province": instance.province,
+            "city_municipality": instance.city_municipality,
+        }
+        for instance in instances
+        if isinstance(instance, Location)
+    ]
+
+
+@hooks.register("after_delete_snippet")
+def audit_location_deletions(request, instances):
+    for deleted in getattr(request, "_lala_location_deletions", []):
+        AuditEvent.objects.create(
+            actor=request.user,
+            action="catalogue.location.deleted",
+            target_type=Location._meta.label,
+            target_id=deleted.pop("target_id"),
+            metadata=deleted,
         )

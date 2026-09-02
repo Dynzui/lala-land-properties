@@ -2,7 +2,7 @@ from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
 from apps.accounts.capabilities import Capability
 from apps.audittrail.models import AuditEvent
@@ -32,8 +32,15 @@ class InquiryViewSet(SnippetViewSet):
         return InquiryAdminForm
 
 
+class InquiryNoteCreateView(CreateView):
+    def save_instance(self):
+        self.form.instance.author = self.request.user
+        return super().save_instance()
+
+
 class InquiryNoteViewSet(SnippetViewSet):
     model = InquiryNote
+    add_view_class = InquiryNoteCreateView
     icon = "comment"
     list_display = ["inquiry", "kind", "author", "occurred_at"]
     list_filter = ["kind", "author"]
@@ -70,12 +77,6 @@ def register_inquiry_dashboard_menu_item():
         icon_name="mail",
         order=250,
     )
-
-
-@hooks.register("before_create_snippet")
-def set_note_author(request, instance):
-    if isinstance(instance, InquiryNote):
-        instance.author = request.user
 
 
 @hooks.register("after_create_snippet")

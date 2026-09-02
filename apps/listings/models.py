@@ -1,5 +1,6 @@
 import uuid
 from builtins import property as builtin_property
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -19,6 +20,20 @@ class ListingQuerySet(models.QuerySet):
                 Listing.PublicStatus.RESERVED,
             ],
             archived_at__isnull=True,
+        ).filter(
+            models.Q(property__isnull=False, property__development__isnull=True)
+            | models.Q(
+                property__isnull=False,
+                property__development__status="ACTIVE",
+                property__development__archived_at__isnull=True,
+            )
+            | models.Q(
+                variant__isnull=False,
+                variant__status="ACTIVE",
+                variant__archived_at__isnull=True,
+                variant__development__status="ACTIVE",
+                variant__development__archived_at__isnull=True,
+            )
         )
 
 
@@ -92,9 +107,12 @@ class Listing(models.Model):
                 FieldPanel("available_quantity"),
             ],
             heading="Inventory",
+            help_text=(
+                "Single property: choose Property only and leave quantity empty. "
+                "Pooled variant inventory: choose Variant only and enter the number available."
+            ),
         ),
         FieldPanel("public_status"),
-        FieldPanel("workflow_status"),
         FieldPanel("featured"),
         MultiFieldPanel(
             [FieldPanel("seo_title"), FieldPanel("seo_description")],
@@ -141,12 +159,23 @@ class Listing(models.Model):
 
     def clean(self):
         super().clean()
-        if self.inventory_mode == self.InventoryMode.POOLED and self.available_quantity is None:
-            raise ValidationError({"available_quantity": "Pooled listings require a quantity."})
-        if self.inventory_mode == self.InventoryMode.SINGLE and self.available_quantity is not None:
-            raise ValidationError(
-                {"available_quantity": "Single-property listings cannot have a pooled quantity."}
-            )
+        errors = {}
+        if self.inventory_mode == self.InventoryMode.POOLED:
+            if not self.variant_id:
+                errors["variant"] = "Choose the development variant represented by this listing."
+            if self.property_id:
+                errors["property"] = "Leave Property empty for pooled variant inventory."
+            if self.available_quantity is None:
+                errors["available_quantity"] = "Enter how many units of this variant are available."
+        elif self.inventory_mode == self.InventoryMode.SINGLE:
+            if not self.property_id:
+                errors["property"] = "Choose the individual property represented by this listing."
+            if self.variant_id:
+                errors["variant"] = "Leave Variant empty for a single-property listing."
+            if self.available_quantity is not None:
+                errors["available_quantity"] = "Leave quantity empty for a single-property listing."
+        if errors:
+            raise ValidationError(errors)
         if self.workflow_status == self.WorkflowStatus.ARCHIVED:
             self.archived_at = self.archived_at or timezone.now()
         elif self.archived_at is not None:
@@ -168,6 +197,11 @@ class Listing(models.Model):
             self.property.InventoryStatus.RESERVED,
         }:
             errors["workflow_status"] = "The selected property is not publicly available."
+        if self.property_id and self.property.development_id and (
+            self.property.development.status != self.property.development.Status.ACTIVE
+            or self.property.development.is_archived
+        ):
+            errors["workflow_status"] = "Published listings require an active development."
         if self.variant_id and (
             self.variant.status != self.variant.Status.ACTIVE
             or self.variant.development.status != self.variant.development.Status.ACTIVE
@@ -180,11 +214,24 @@ class Listing(models.Model):
 
     @builtin_property
     def is_publicly_available(self) -> bool:
-        return (
+        available = (
             self.workflow_status == self.WorkflowStatus.PUBLISHED
             and self.public_status in {self.PublicStatus.AVAILABLE, self.PublicStatus.RESERVED}
             and self.archived_at is None
         )
+        if not available:
+            return False
+        if self.property_id and self.property.development_id:
+            development = self.property.development
+            return development.status == development.Status.ACTIVE and not development.is_archived
+        if self.variant_id:
+            return (
+                self.variant.status == self.variant.Status.ACTIVE
+                and not self.variant.is_archived
+                and self.variant.development.status == self.variant.development.Status.ACTIVE
+                and not self.variant.development.is_archived
+            )
+        return True
 
     @builtin_property
     def public_location(self):
@@ -327,6 +374,31 @@ class Offer(models.Model):
                 errors["deposit_amount"] = "Lease terms are for rental offers only."
         if errors:
             raise ValidationError(errors)
+
+    @staticmethod
+    def _format_amount(value: Decimal | None) -> str:
+        if value is None:
+            return ""
+        return f"{value:,.0f}"
+
+    @builtin_property
+    def display_price(self) -> str:
+        symbol = "₱" if self.currency == "PHP" else f"{self.currency} "
+        suffix = f" / {self.get_rent_period_display().lower()}" if self.rent_period else ""
+        if self.price_display == self.PriceDisplay.CONTACT:
+            return "Contact for price"
+        if self.price_display == self.PriceDisplay.NEGOTIABLE:
+            if self.price_min is None:
+                return "Price negotiable"
+            return f"{symbol}{self._format_amount(self.price_min)} negotiable{suffix}"
+        if self.price_display == self.PriceDisplay.STARTING_AT:
+            return f"From {symbol}{self._format_amount(self.price_min)}{suffix}"
+        if self.price_display == self.PriceDisplay.RANGE:
+            return (
+                f"{symbol}{self._format_amount(self.price_min)}–"
+                f"{symbol}{self._format_amount(self.price_max)}{suffix}"
+            )
+        return f"{symbol}{self._format_amount(self.price_min)}{suffix}"
 
     def as_public_dict(self) -> dict:
         data = {

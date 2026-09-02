@@ -1,0 +1,15 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Listing workflow{% endblock %}
+{% block content %}
+<header class="w-header"><div class="w-header__main"><h1>Listing workflow</h1><p>Create the listing and its offer, then publish it here. Archived records can be restored as drafts.</p></div></header>
+<div class="nice-padding">
+  <p><a class="button" href="{% url 'wagtailsnippets_listings_listing:add' %}">Create draft listing</a> <a class="button button-secondary" href="{% url 'wagtailsnippets_listings_offer:add' %}">Add sale or rental offer</a></p>
+  <table class="listing"><thead><tr><th>Listing</th><th>Offer</th><th>Public status</th><th>Workflow</th><th>Actions</th></tr></thead><tbody>
+  {% for listing in listings %}<tr><td><a href="{% url 'wagtailsnippets_listings_listing:edit' listing.pk %}"><strong>{{ listing.title }}</strong></a></td><td>{% with offer=listing.offers.all|first %}{% if offer %}{{ offer.get_transaction_type_display }} · {{ offer.display_price }}{% else %}<a href="{% url 'wagtailsnippets_listings_offer:add' %}">Add required offer</a>{% endif %}{% endwith %}</td><td>{{ listing.get_public_status_display }}</td><td>{{ listing.get_workflow_status_display }}</td><td>
+    {% if listing.workflow_status == 'ARCHIVED' %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'restore' %}">{% csrf_token %}<button class="button button-small" type="submit">Restore as draft</button></form>
+    {% elif listing.workflow_status == 'PUBLISHED' %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'archive' %}">{% csrf_token %}<button class="button button-small button-secondary" type="submit">Archive</button></form>
+    {% else %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'publish' %}">{% csrf_token %}<button class="button button-small" type="submit">Publish</button></form>{% endif %}
+  </td></tr>{% empty %}<tr><td colspan="5">No listings yet.</td></tr>{% endfor %}
+  </tbody></table>
+</div>
+{% endblock %}

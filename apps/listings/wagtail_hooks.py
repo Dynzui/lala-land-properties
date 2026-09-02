@@ -1,13 +1,27 @@
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet
+from django.urls import path, reverse
+from wagtail.admin.menu import MenuItem
+from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
+from .admin_views import listing_action, listing_workflow
 from .models import Listing, Offer
 from .services import record_listing_change, serialize_record
 
 
+class ListingCreateView(CreateView):
+    def save_instance(self):
+        self.form.instance.workflow_status = Listing.WorkflowStatus.DRAFT
+        self.form.instance.archived_at = None
+        return super().save_instance()
+
+    def get_success_url(self):
+        return f"{reverse('wagtailsnippets_listings_offer:add')}?listing={self.object.pk}"
+
+
 class ListingViewSet(SnippetViewSet):
     model = Listing
+    add_view_class = ListingCreateView
     icon = "doc-full"
     list_display = [
         "title",
@@ -22,8 +36,21 @@ class ListingViewSet(SnippetViewSet):
     ordering = ["-published_at", "title"]
 
 
+class OfferCreateView(CreateView):
+    def get_initial(self):
+        initial = super().get_initial()
+        listing_id = self.request.GET.get("listing")
+        if listing_id:
+            initial["listing"] = listing_id
+        return initial
+
+    def get_success_url(self):
+        return reverse("lala_listing_workflow")
+
+
 class OfferViewSet(SnippetViewSet):
     model = Offer
+    add_view_class = OfferCreateView
     icon = "pick"
     list_display = [
         "listing",
@@ -40,6 +67,19 @@ class OfferViewSet(SnippetViewSet):
 
 register_snippet(Listing, viewset=ListingViewSet)
 register_snippet(Offer, viewset=OfferViewSet)
+
+
+@hooks.register("register_admin_urls")
+def register_listing_admin_urls():
+    return [
+        path("listing-workflow/", listing_workflow, name="lala_listing_workflow"),
+        path("listing-workflow/<uuid:listing_id>/<str:action>/", listing_action, name="lala_listing_action"),
+    ]
+
+
+@hooks.register("register_admin_menu_item")
+def register_listing_workflow_menu_item():
+    return MenuItem("Listing workflow", reverse("lala_listing_workflow"), icon_name="doc-full", order=210)
 
 
 @hooks.register("before_edit_snippet")

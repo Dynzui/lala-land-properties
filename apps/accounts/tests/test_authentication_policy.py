@@ -80,8 +80,11 @@ def test_property_permissions_keep_private_locations_owner_only():
     admin = create_user(username="property-admin", role=user_model.Role.ADMIN)
 
     assert owner.has_perm("properties.change_location")
+    assert owner.has_perm("properties.delete_location")
     assert admin.has_perm("properties.view_location")
-    assert not admin.has_perm("properties.change_location")
+    # Admins may maintain public location data; the CMS form removes private exact fields.
+    assert admin.has_perm("properties.change_location")
+    assert not admin.has_perm("properties.delete_location")
     assert owner.has_perm("properties.change_property")
     assert admin.has_perm("properties.change_property")
     assert not owner.has_perm("properties.delete_property")

@@ -9,6 +9,8 @@ from django.utils import timezone
 from wagtail.admin.panels import FieldPanel, MultiFieldPanel
 from wagtail.fields import RichTextField
 
+from .widgets import MapCoordinateWidget
+
 
 class TimestampedUUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -121,16 +123,28 @@ class Location(TimestampedUUIDModel):
             [
                 FieldPanel("public_label"),
                 FieldPanel("visibility"),
-                FieldPanel("public_latitude"),
-                FieldPanel("public_longitude"),
+                FieldPanel(
+                    "public_latitude",
+                    widget=MapCoordinateWidget(map_name="public", axis="latitude"),
+                ),
+                FieldPanel(
+                    "public_longitude",
+                    widget=MapCoordinateWidget(map_name="public", axis="longitude"),
+                ),
             ],
             heading="Public location",
         ),
         MultiFieldPanel(
             [
                 FieldPanel("street_address_private"),
-                FieldPanel("latitude_private"),
-                FieldPanel("longitude_private"),
+                FieldPanel(
+                    "latitude_private",
+                    widget=MapCoordinateWidget(map_name="private", axis="latitude"),
+                ),
+                FieldPanel(
+                    "longitude_private",
+                    widget=MapCoordinateWidget(map_name="private", axis="longitude"),
+                ),
             ],
             heading="Private exact location — Owner access only",
         ),
@@ -287,12 +301,52 @@ class Development(ArchivableModel):
 
     def clean(self):
         super().clean()
+        if self.pk and self.status == self.Status.ARCHIVED:
+            previous = Development.objects.filter(pk=self.pk).values("status").first()
+            if previous and previous["status"] != self.Status.ARCHIVED:
+                blocker = self.archive_blocker_message()
+                if blocker:
+                    raise ValidationError({"status": blocker})
         if self.status == self.Status.ACTIVE and self.published_at is None:
             self.published_at = timezone.now()
         if self.status == self.Status.ARCHIVED and self.archived_at is None:
             self.archived_at = timezone.now()
         if self.status != self.Status.ARCHIVED and self.archived_at is not None:
             raise ValidationError({"status": "Archived records must keep ARCHIVED status."})
+
+    def published_listings(self):
+        """Return published listings that directly or indirectly use this development."""
+        from apps.listings.models import Listing
+
+        return (
+            Listing.objects.filter(workflow_status=Listing.WorkflowStatus.PUBLISHED)
+            .filter(
+                models.Q(property__development=self)
+                | models.Q(property__variant__development=self)
+                | models.Q(variant__development=self)
+            )
+            .distinct()
+            .order_by("title")
+        )
+
+    def archive_blocker_message(self) -> str:
+        published_listings = self.published_listings()
+        if not published_listings.exists():
+            return ""
+        listing_names = ", ".join(published_listings.values_list("title", flat=True))
+        active_variants = ", ".join(
+            self.variants.filter(
+                status=Variant.Status.ACTIVE,
+                archived_at__isnull=True,
+            ).values_list("name", flat=True)
+        )
+        linked_properties = ", ".join(self.properties.values_list("reference_code", flat=True))
+        details = [f"Published listings: {listing_names}."]
+        if active_variants:
+            details.append(f"Active variants left unchanged: {active_variants}.")
+        if linked_properties:
+            details.append(f"Linked properties left unchanged: {linked_properties}.")
+        return "Archive the published listings first. " + " ".join(details)
 
     def as_public_dict(self) -> dict:
         if self.status != self.Status.ACTIVE or self.is_archived:
@@ -481,6 +535,7 @@ class Property(ArchivableModel):
     ]
 
     class Meta:
+        verbose_name_plural = "properties"
         ordering = ["reference_code"]
         indexes = [
             models.Index(fields=["property_type", "inventory_status"]),
