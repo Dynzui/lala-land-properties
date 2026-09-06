@@ -45,6 +45,7 @@ class SiteContactSettings(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
     facebook_url = models.URLField(blank=True)
     instagram_url = models.URLField(blank=True)
+    tiktok_url = models.URLField(blank=True)
     messenger_url = models.URLField(blank=True)
     whatsapp_url = models.URLField(blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -52,6 +53,7 @@ class SiteContactSettings(models.Model):
     panels = [
         FieldPanel("facebook_url"),
         FieldPanel("instagram_url"),
+        FieldPanel("tiktok_url"),
         FieldPanel("messenger_url"),
         FieldPanel("whatsapp_url"),
     ]

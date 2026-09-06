@@ -9,21 +9,27 @@
     <p>Explore homes, lots, and developments selected with honest guidance and clear information.</p>
   </header>
   <section class="property-search" aria-labelledby="search-heading">
-    <div class="search-heading"><div><p class="eyebrow">Property search</p><h2 id="search-heading">Narrow the <em>collection.</em></h2></div><p>{{ listings|length }} match{{ listings|length|pluralize:"es" }}</p></div>
-    <form class="property-filter" method="get">
+    <div class="search-heading"><div><p class="eyebrow">Property search</p><h2 id="search-heading">Narrow the <em>collection.</em></h2></div><p>{{ listings|length }} match{{ listings|length|pluralize:"es" }}</p><button class="filter-close" type="button" aria-label="Close filters">×</button></div>
+    <form id="property-filter" class="property-filter" method="get">
       <div><label for="{{ filter_form.transaction.id_for_label }}">Looking for</label>{{ filter_form.transaction }}</div>
       <div><label for="{{ filter_form.property_type.id_for_label }}">Property type</label>{{ filter_form.property_type }}</div>
-      <div><label for="{{ filter_form.region.id_for_label }}">Region</label>{{ filter_form.region }}</div>
-      <div><label for="{{ filter_form.province.id_for_label }}">Province</label>{{ filter_form.province }}</div>
-      <div><label for="{{ filter_form.city_municipality.id_for_label }}">City / municipality</label>{{ filter_form.city_municipality }}</div>
       <div><label for="{{ filter_form.bedrooms.id_for_label }}">Bedrooms</label>{{ filter_form.bedrooms }}</div>
-      <div><label for="{{ filter_form.min_price.id_for_label }}">Minimum price (₱)</label>{{ filter_form.min_price }}</div>
-      <div><label for="{{ filter_form.max_price.id_for_label }}">Maximum price (₱)</label>{{ filter_form.max_price }}</div>
       <div><label for="{{ filter_form.status.id_for_label }}">Availability</label>{{ filter_form.status }}</div>
+      <details class="advanced-filters" open data-has-active-filters="{% if filter_form.region.value or filter_form.province.value or filter_form.city_municipality.value or filter_form.min_price.value or filter_form.max_price.value %}true{% else %}false{% endif %}">
+        <summary>Advanced filters <span aria-hidden="true">⌄</span></summary>
+        <div class="advanced-filter-grid">
+          <div><label for="{{ filter_form.region.id_for_label }}">Region</label>{{ filter_form.region }}</div>
+          <div><label for="{{ filter_form.province.id_for_label }}">Province</label>{{ filter_form.province }}</div>
+          <div><label for="{{ filter_form.city_municipality.id_for_label }}">City / municipality</label>{{ filter_form.city_municipality }}</div>
+          <div><label for="{{ filter_form.min_price.id_for_label }}">Minimum price (₱)</label>{{ filter_form.min_price }}</div>
+          <div><label for="{{ filter_form.max_price.id_for_label }}">Maximum price (₱)</label>{{ filter_form.max_price }}</div>
+        </div>
+      </details>
       <div class="filter-actions"><button class="button" type="submit">Search properties</button>{% if has_filters %}<a href="{% url 'listings:index' %}">Clear filters</a>{% endif %}</div>
       {% if filter_form.errors %}<div class="filter-errors" role="alert">Please check the price range and try again.</div>{% endif %}
     </form>
   </section>
+  <button class="mobile-filter-fab" type="button" aria-controls="property-filter" aria-expanded="false"><span aria-hidden="true">☰</span> Filters</button>
   <section class="listing-grid" aria-label="Property search results">
     {% for listing in listings %}
     <article class="listing-card">

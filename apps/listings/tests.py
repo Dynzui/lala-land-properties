@@ -275,6 +275,19 @@ def test_public_index_excludes_unavailable_listings(client):
     assert listing.title not in response.content.decode()
 
 
+def test_public_index_includes_mobile_filter_controls(client):
+    response = client.get(reverse("listings:index"))
+
+    content = response.content.decode()
+    assert response.status_code == 200
+    assert 'id="property-filter"' in content
+    assert 'class="mobile-filter-fab"' in content
+    assert 'aria-controls="property-filter"' in content
+    assert 'class="filter-close"' in content
+    assert 'class="advanced-filters"' in content
+    assert "Advanced filters" in content
+
+
 def test_inquiry_link_tags_listing_and_routes_to_contact(client):
     _, _, property_record = make_catalogue()
     listing = make_listing(property_record=property_record)

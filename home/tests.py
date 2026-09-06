@@ -40,3 +40,10 @@ class HomeTests(WagtailPageTestCase):
     def test_homepage_template_used(self):
         response = self.client.get(self.homepage.url)
         self.assertTemplateUsed(response, "home/home_page.html")
+
+    def test_mobile_navigation_uses_accessible_burger_control(self):
+        response = self.client.get(self.homepage.url)
+
+        self.assertContains(response, 'class="nav-toggle"')
+        self.assertContains(response, 'aria-label="Open navigation"')
+        self.assertContains(response, 'aria-controls="site-nav"')

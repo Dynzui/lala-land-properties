@@ -243,6 +243,7 @@ def test_social_contact_settings_are_singleton_and_render_when_configured(client
     settings = SiteContactSettings.objects.get(pk=1)
     settings.facebook_url = "https://facebook.com/lalaland.example"
     settings.instagram_url = "https://instagram.com/lalaland.example"
+    settings.tiktok_url = "https://tiktok.com/@lalaland.example"
     settings.save()
 
     duplicate = SiteContactSettings(facebook_url="https://example.com/other")
@@ -254,6 +255,7 @@ def test_social_contact_settings_are_singleton_and_render_when_configured(client
     assert response.status_code == 200
     assert b"https://facebook.com/lalaland.example" in response.content
     assert b"https://instagram.com/lalaland.example" in response.content
+    assert b"https://tiktok.com/@lalaland.example" in response.content
 
 
 def test_article_publication_date_falls_back_to_revision_timestamp():
