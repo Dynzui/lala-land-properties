@@ -58,6 +58,20 @@ def test_new_cover_demotes_previous_cover_for_same_target():
     assert second.is_cover is True
 
 
+def test_floor_plan_cannot_be_used_as_cover():
+    _, _, property_record = make_catalogue()
+    floor_plan = CatalogueMedia(
+        image=make_image("Floor plan"),
+        property=property_record,
+        kind=CatalogueMedia.Kind.FLOOR_PLAN,
+        alt_text="Ground floor layout",
+        is_cover=True,
+    )
+
+    with pytest.raises(ValidationError, match="Only a property photo"):
+        floor_plan.save()
+
+
 def test_media_inheritance_prefers_property_then_variant_then_development():
     _, variant, property_record = make_catalogue()
     listing = make_listing(property_record=property_record)
@@ -105,3 +119,26 @@ def test_public_pages_render_managed_image_and_alt_text(client):
     assert detail_response.status_code == 200
     assert b"Ivory home with a landscaped front garden" in index_response.content
     assert b"Ivory home with a landscaped front garden" in detail_response.content
+
+
+def test_detail_separates_floor_plans_from_photo_gallery(client):
+    _, _, property_record = make_catalogue()
+    listing = make_listing(property_record=property_record)
+    make_offer(listing)
+    listing = publish_listing(actor=make_owner(), listing=listing)
+    photo = CatalogueMedia.objects.create(
+        image=make_image("Exterior"), property=property_record, alt_text="Home exterior"
+    )
+    floor_plan = CatalogueMedia.objects.create(
+        image=make_image("Plan"),
+        property=property_record,
+        kind=CatalogueMedia.Kind.FLOOR_PLAN,
+        alt_text="Two bedroom floor plan",
+    )
+
+    response = client.get(reverse("listings:detail", args=[listing.slug]))
+
+    assert response.context["gallery"] == [photo]
+    assert response.context["floor_plans"] == [floor_plan]
+    assert b"Property gallery" in response.content
+    assert b"Floor plan" in response.content

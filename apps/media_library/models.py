@@ -14,12 +14,17 @@ class CatalogueMediaQuerySet(models.QuerySet):
 
 
 class CatalogueMedia(models.Model):
+    class Kind(models.TextChoices):
+        PHOTO = "PHOTO", "Property photo"
+        FLOOR_PLAN = "FLOOR_PLAN", "Floor plan"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ForeignKey(
         get_image_model_string(),
         on_delete=models.PROTECT,
         related_name="catalogue_placements",
     )
+    kind = models.CharField(max_length=16, choices=Kind.choices, default=Kind.PHOTO)
     property = models.ForeignKey(
         "properties.Property",
         blank=True,
@@ -55,6 +60,7 @@ class CatalogueMedia(models.Model):
 
     panels = [
         FieldPanel("image"),
+        FieldPanel("kind"),
         MultiFieldPanel(
             [FieldPanel("property"), FieldPanel("variant"), FieldPanel("development")],
             heading="Attach to exactly one catalogue record",
@@ -130,6 +136,8 @@ class CatalogueMedia(models.Model):
             raise ValidationError({"alt_text": "Alternative text is required."})
         if self.is_cover and self.archived_at:
             raise ValidationError({"is_cover": "Archived media cannot be a cover image."})
+        if self.is_cover and self.kind != self.Kind.PHOTO:
+            raise ValidationError({"is_cover": "Only a property photo can be the cover image."})
 
     @builtin_property
     def target(self):

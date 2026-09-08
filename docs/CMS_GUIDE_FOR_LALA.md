@@ -19,25 +19,19 @@ Never share the Owner account. Give each employee a separate account so the audi
 - **Maintainer:** Technical maintenance only. This role cannot use the business CMS or bypass the Owner's authentication.
 - **Customer:** Public website account level. It cannot enter the CMS.
 
-## 2. The safest order for adding a property
+## 2. Adding and editing a property listing
 
-The catalogue is connected. Create records in this order:
+Use **Listings** in the main sidebar. Select **Add property listing** and complete the five sections. This one guided form creates the internal Property, Listing, and Price and availability records together.
 
-1. **Property type** — what kind of property it is.
-2. **Location** — where it is and how precisely visitors may see it.
-3. **Development** — the subdivision, condominium, memorial park, or other project, when applicable.
-4. **Variant** — a repeatable model inside a development, when applicable.
-5. **Property** — an individual unit, house, lot, or memorial lot.
-6. **Catalogue media** — photographs attached to the development, variant, or individual property.
-7. **Listing** — the customer-facing advertisement.
-8. **Offer** — sale or rental price information for the listing.
-9. **Listing workflow** — publish the finished listing.
+Choose **One specific property or lot** for resale homes, individual rentals, specific lots, and most everyday listings. Choose **Several interchangeable units of one house model** only when multiple units share the same design and one listing represents the whole pool.
 
-Not every listing needs both a Development and Variant. A standalone property may go directly from Location to Property.
+If the needed Location, Development, or House model does not exist yet, use the shortcut at the top of the form to create it, then return to Listings. After saving, use **Add photos** beside the listing. Review the draft and select **Publish** only when it is ready.
 
-## 3. Snippets
+To make changes later, select **Edit listing**. The same guided form updates the public copy, property details, availability, and price without creating replacement records.
 
-The **Snippets** menu contains reusable business records.
+## 3. Advanced catalogue records
+
+The technical Snippets menu is intentionally hidden from the main sidebar. The following records remain available through the guided Listings and Developments screens when advanced maintenance is needed.
 
 ### Property types
 
@@ -86,9 +80,9 @@ A Development is a larger project containing one or more variants or individual 
 
 A Development cannot be archived while published listings depend on it. Archive those listings first. Archiving a Development does not automatically archive its Variants or Properties. Restoring it returns it to Draft so it can be reviewed before activation.
 
-### Variants
+### House models
 
-A Variant is a repeatable model within a Development—for example, “Amara 3-bedroom model.”
+A House model (internally called a Variant) is a repeatable design within a Development—for example, “Amara 3-bedroom model.”
 
 - Select the correct **Development** and **Property type**.
 - Add the model name, slug, description, and relevant specifications.
@@ -114,10 +108,12 @@ Use inventory status to reflect the real-world unit. Do not delete a sold or ren
 
 Catalogue Media connects an uploaded image to exactly one Development, Variant, or Property.
 
-- First upload the photograph through **Images** if necessary.
+- First upload the photograph or floor plan through **Images** if necessary.
+- Choose **Property photo** for normal gallery images or **Floor plan** for a plan image.
 - Attach it to exactly one catalogue record.
 - Write useful **alt text** describing what is visibly present in the image.
 - Add an optional caption.
+- Only a **Property photo** can be marked as the cover. Floor plans appear in their own section.
 - Use **sort order** to control sequence; lower numbers come first.
 - Select **is cover** for the primary image. Only one active cover is allowed per record, and choosing a new cover replaces the old cover selection.
 
@@ -136,9 +132,9 @@ A Listing is the public advertisement that customers browse.
 
 New Listings always begin as Draft. A Listing requires one active Offer and a safe public Location before it can be published.
 
-### Offers
+### Price and availability
 
-An Offer gives a Listing its sale or rental terms. Only one Offer may be active for a Listing at a time.
+A Price and availability record (internally called an Offer) gives a Listing its sale or rental terms. The guided listing form normally manages it automatically. Only one may be active for a Listing at a time.
 
 - **Listing:** The advertisement this pricing belongs to.
 - **Transaction type:** For Sale or For Rent.
@@ -192,9 +188,9 @@ Categories organize Resources articles, such as Homebuyer Guides or Property Tip
 
 This single record stores Lala Land's real Facebook, Instagram, TikTok, Messenger, and WhatsApp links. Leave an unsupported service blank. Test every URL after changing it.
 
-## 4. Listing workflow
+## 4. Listings review and publishing
 
-The **Listing workflow** menu is the safe place to publish, archive, and restore listings.
+The **Listings** menu is the safe place to add, edit, publish, archive, and restore listings.
 
 ### Publishing
 

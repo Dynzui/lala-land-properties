@@ -1,0 +1,9 @@
+{% extends "wagtailsnippets/snippets/create.html" %}
+{% load static %}
+
+{% block bodyclass %}{{ block.super }} lala-mobile-catalogue-form{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/catalogue-form-admin.css' %}?v=1">
+{% endblock %}

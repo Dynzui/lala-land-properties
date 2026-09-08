@@ -10,6 +10,7 @@ from apps.audittrail.models import AuditEvent
 from apps.properties.models import Development, Location, Property, PropertyType, Variant
 
 from .models import Listing, Offer
+from .admin_forms import GuidedListingForm
 from .services import archive_listing, publish_listing, restore_listing, set_public_status
 
 pytestmark = pytest.mark.django_db
@@ -104,6 +105,99 @@ def test_listing_requires_exactly_one_matching_target():
 
     with pytest.raises(ValidationError):
         listing.save()
+
+
+def guided_listing_data(location_record, property_type_record, **overrides):
+    values = {
+        "title": "Guided Bacolod Home",
+        "summary": "A home created in one clear workflow.",
+        "description": "A complete customer-facing description.",
+        "arrangement": Listing.InventoryMode.SINGLE,
+        "development": "",
+        "house_model": "",
+        "available_quantity": "",
+        "property_type": str(property_type_record.pk),
+        "location": str(location_record.pk),
+        "bedrooms": "3",
+        "bathrooms": "2",
+        "parking_spaces": "1",
+        "floor_area_sqm": "110",
+        "lot_area_sqm": "140",
+        "furnishing": Property.Furnishing.UNFURNISHED,
+        "transaction_type": Offer.TransactionType.SALE,
+        "price_display": Offer.PriceDisplay.EXACT,
+        "price_min": "4200000",
+        "price_max": "",
+        "rent_period": "",
+        "public_status": Listing.PublicStatus.AVAILABLE,
+        "featured": "",
+    }
+    values.update(overrides)
+    return values
+
+
+def test_guided_form_creates_property_listing_and_price_together():
+    location, _, property_record = make_catalogue()
+    owner = make_owner()
+    form = GuidedListingForm(data=guided_listing_data(location, property_record.property_type))
+
+    assert form.is_valid(), form.errors
+    listing = form.save(actor=owner)
+
+    assert listing.property.location == location
+    assert listing.workflow_status == Listing.WorkflowStatus.DRAFT
+    assert listing.offers.get().price_min == Decimal("4200000")
+    assert AuditEvent.objects.filter(target_id=str(listing.pk)).exists()
+    assert AuditEvent.objects.filter(target_id=str(listing.property_id)).exists()
+
+
+def test_guided_form_creates_pooled_listing_without_property_step():
+    location, variant, property_record = make_catalogue()
+    owner = make_owner()
+    data = guided_listing_data(
+        location,
+        property_record.property_type,
+        title="Guided Model A",
+        arrangement=Listing.InventoryMode.POOLED,
+        house_model=str(variant.pk),
+        available_quantity="4",
+        property_type="",
+        location="",
+    )
+    form = GuidedListingForm(data=data)
+
+    assert form.is_valid(), form.errors
+    listing = form.save(actor=owner)
+
+    assert listing.variant == variant
+    assert listing.property is None
+    assert listing.available_quantity == 4
+
+
+def test_guided_form_updates_listing_property_and_price_without_new_records():
+    location, _, property_record = make_catalogue()
+    owner = make_owner()
+    listing = make_listing(property_record=property_record)
+    offer = make_offer(listing)
+    data = guided_listing_data(
+        location,
+        property_record.property_type,
+        title="Updated Guided Home",
+        bedrooms="4",
+        price_min="5100000",
+    )
+    form = GuidedListingForm(data=data, listing=listing)
+
+    assert form.is_valid(), form.errors
+    updated = form.save(actor=owner)
+
+    property_record.refresh_from_db()
+    offer.refresh_from_db()
+    assert updated.pk == listing.pk
+    assert Property.objects.filter(pk=property_record.pk).count() == 1
+    assert updated.title == "Updated Guided Home"
+    assert property_record.bedrooms == 4
+    assert offer.price_min == Decimal("5100000")
 
 
 def test_pooled_listing_explains_required_variant_and_quantity():
@@ -299,6 +393,42 @@ def test_inquiry_link_tags_listing_and_routes_to_contact(client):
     assert response.status_code == 302
     assert response.url.startswith("/contact/?")
     assert str(listing.pk) in response.url
+
+
+def test_detail_recommends_only_other_public_listings(client):
+    _, variant, property_record = make_catalogue()
+    current = make_listing(property_record=property_record)
+    make_offer(current)
+    owner = make_owner()
+    current = publish_listing(actor=owner, listing=current)
+    similar = Listing.objects.create(
+        variant=variant,
+        slug="similar-home",
+        title="Similar Home",
+        summary="Another suitable home.",
+        description="A second complete listing description.",
+        inventory_mode=Listing.InventoryMode.POOLED,
+        available_quantity=2,
+    )
+    make_offer(similar)
+    similar = publish_listing(actor=owner, listing=similar)
+    unavailable = Listing.objects.create(
+        variant=variant,
+        slug="hidden-home",
+        title="Hidden Home",
+        summary="This should not be recommended.",
+        description="An unavailable listing description.",
+        inventory_mode=Listing.InventoryMode.POOLED,
+        available_quantity=1,
+    )
+    make_offer(unavailable)
+
+    response = client.get(reverse("listings:detail", args=[current.slug]))
+
+    assert response.status_code == 200
+    assert similar in response.context["similar_listings"]
+    assert unavailable not in response.context["similar_listings"]
+    assert current not in response.context["similar_listings"]
 
 
 def test_public_property_search_filters_sale_location_type_bedrooms_and_price(client):

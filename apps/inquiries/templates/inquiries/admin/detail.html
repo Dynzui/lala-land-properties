@@ -1,6 +1,6 @@
 {% extends "wagtailadmin/base.html" %}{% load static %}
 {% block titletag %}{{ inquiry.name }} · Inquiry{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/inquiry-admin.css' %}">{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/inquiry-admin.css' %}?v=4">{% endblock %}
 {% block content %}
 <header class="lala-admin-header"><div><p>{{ inquiry.get_interest_display }}</p><h1>{{ inquiry.name }}</h1><span>{{ inquiry.property_reference }} · Received {{ inquiry.created_at|date:"M j, Y g:i a" }}</span></div><div class="header-actions"><a class="button button-secondary" href="{% url 'lala_inquiry_dashboard' %}">Dashboard</a><a class="button" href="{% url 'wagtailsnippets_inquiries_inquiry:edit' inquiry.pk %}">Update inquiry</a></div></header>
 <div class="lala-admin-wrap inquiry-detail-grid">

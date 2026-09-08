@@ -1,7 +1,10 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils import timezone
+from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from wagtail.models import GroupPagePermission
 
 from home.models import HomePage
@@ -262,3 +265,77 @@ def test_article_publication_date_falls_back_to_revision_timestamp():
     article = make_article(live=False)
 
     assert article.publication_date <= timezone.now()
+
+
+def make_content_editor(role, username):
+    user_model = get_user_model()
+    return user_model.objects.create_user(
+        username=username,
+        email=f"{username}@example.test",
+        password="safe-test-password",
+        role=role,
+        status=user_model.Status.ACTIVE,
+    )
+
+
+def force_verified_login(client, user):
+    device = TOTPDevice.objects.create(user=user, name="test-device", confirmed=True)
+    client.force_login(user)
+    session = client.session
+    session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+    session["account_session_version"] = user.session_version
+    session.save()
+
+
+@pytest.mark.parametrize("role", ["OWNER", "ADMIN"])
+def test_content_editor_can_open_friendly_content_dashboard(client, role):
+    editor = make_content_editor(role, f"{role.lower()}-content-hub")
+    force_verified_login(client, editor)
+
+    response = client.get(reverse("lala_content_dashboard"))
+
+    assert response.status_code == 200
+    assert b"Website content" in response.content
+    assert b"About Lala" in response.content
+    assert b"Resources and articles" in response.content
+    assert b"Add article" in response.content
+
+
+def test_only_owner_sees_advanced_page_manager_and_global_content_actions(client):
+    user_model = get_user_model()
+    owner = make_content_editor(user_model.Role.OWNER, "content-owner")
+    admin = make_content_editor(user_model.Role.ADMIN, "content-admin")
+
+    force_verified_login(client, owner)
+    owner_response = client.get(reverse("lala_content_dashboard"))
+    assert b"Open advanced page manager" in owner_response.content
+    assert b"Edit home page" in owner_response.content
+    assert b"Edit contact links" in owner_response.content
+
+    force_verified_login(client, admin)
+    admin_response = client.get(reverse("lala_content_dashboard"))
+    assert b"Open advanced page manager" not in admin_response.content
+    assert admin_response.content.count(b"Owner managed") == 2
+
+
+def test_content_dashboard_uses_plain_language_article_status(client):
+    editor = make_content_editor(get_user_model().Role.ADMIN, "status-editor")
+    make_article(live=False, title="Draft Guide", slug="draft-guide")
+    force_verified_login(client, editor)
+
+    response = client.get(reverse("lala_content_dashboard"))
+
+    assert response.status_code == 200
+    assert b"Draft Guide" in response.content
+    assert b"Draft" in response.content
+
+
+def test_content_dashboard_replaces_default_pages_sidebar_item(client):
+    editor = make_content_editor(get_user_model().Role.ADMIN, "content-menu-editor")
+    force_verified_login(client, editor)
+
+    response = client.get(reverse("wagtailadmin_home"))
+
+    assert response.status_code == 200
+    assert b"Website content" in response.content
+    assert b'href="/admin/pages/"' not in response.content

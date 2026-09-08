@@ -1,0 +1,9 @@
+{% extends "wagtailsnippets/snippets/index.html" %}
+{% load static %}
+
+{% block bodyclass %}{{ block.super }} lala-mobile-catalogue lala-catalogue-{{ model_opts.model_name }}{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/catalogue-admin.css' %}?v=2">
+{% endblock %}

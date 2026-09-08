@@ -1,0 +1,256 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Website content{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .content-hub-header .w-header__main {
+      padding: 1.5rem 5rem 0;
+    }
+
+    .content-hub-shell {
+      padding-top: 1.75rem;
+      padding-bottom: 3rem;
+    }
+
+    .content-hub-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .content-hub-heading h2,
+    .content-hub-heading p {
+      margin: 0;
+    }
+
+    .content-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .content-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 11rem;
+      padding: 1.25rem;
+      border: 1px solid var(--w-color-border-furniture);
+      border-radius: .4rem;
+      background: var(--w-color-surface-page);
+    }
+
+    .content-card h3 {
+      margin: 0 0 .35rem;
+    }
+
+    .content-card p {
+      margin: 0 0 1rem;
+      color: var(--w-color-text-context);
+    }
+
+    .content-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      margin-top: auto;
+    }
+
+    .content-status {
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    .owner-note {
+      color: var(--w-color-text-context);
+      font-size: .8rem;
+    }
+
+    .article-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .content-advanced {
+      margin-top: 1.25rem;
+      color: var(--w-color-text-context);
+    }
+
+    @media (max-width: 1100px) {
+      .article-table,
+      .article-table tbody {
+        display: block;
+        width: 100%;
+      }
+
+      .article-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .article-table tbody {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .article-table tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .9rem 1rem;
+        padding: 1rem;
+        border: 1px solid var(--w-color-border-furniture);
+        border-radius: .4rem;
+        background: var(--w-color-surface-page);
+      }
+
+      .article-table tbody td {
+        display: block;
+        width: auto;
+        padding: 0;
+        border: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .article-table tbody td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: .2rem;
+        color: var(--w-color-text-context);
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+
+      .article-title,
+      .article-action,
+      .article-empty {
+        grid-column: 1 / -1;
+      }
+
+      .article-title::before,
+      .article-empty::before {
+        display: none !important;
+      }
+
+      .article-title {
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 50em) {
+      .content-hub-header .w-header__main {
+        padding: 1rem 1rem 0 4.5rem;
+      }
+
+      .content-hub-shell {
+        padding-top: 1.25rem;
+      }
+
+      .content-card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .content-hub-heading {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <header class="w-header content-hub-header">
+    <div class="w-header__main">
+      <h1>Website content</h1>
+      <p>Edit the public pages and helpful articles customers see.</p>
+    </div>
+  </header>
+
+  <div class="nice-padding content-hub-shell">
+    <div class="content-hub-heading">
+      <div>
+        <h2>Main pages</h2>
+        <p>Choose what you want to update.</p>
+      </div>
+    </div>
+
+    <div class="content-card-grid">
+      {% for card in content_cards %}
+        <section class="content-card">
+          <h3>{{ card.name }}</h3>
+          <p>{{ card.description }}</p>
+          <div class="content-card-footer">
+            <span class="content-status">{{ card.status }}</span>
+            {% if card.url %}
+              <a class="button button-small" href="{{ card.url }}">{{ card.action }}</a>
+            {% elif card.owner_only %}
+              <span class="owner-note">Owner managed</span>
+            {% endif %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+
+    <div class="content-hub-heading">
+      <div>
+        <h2>Resources and articles</h2>
+        <p>Create, edit, and publish practical guides for customers.</p>
+      </div>
+      <div class="article-actions">
+        <a class="button button-secondary" href="{{ manage_categories_url }}">Manage categories</a>
+        {% if add_article_url %}
+          <a class="button" href="{{ add_article_url }}">Add article</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <table class="listing article-table">
+      <thead>
+        <tr>
+          <th>Article</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Last updated</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for article in articles %}
+          <tr>
+            <td class="article-title"><strong>{{ article.title }}</strong></td>
+            <td data-label="Category">{{ article.category }}</td>
+            <td data-label="Status">{{ article.status }}</td>
+            <td data-label="Last updated">{{ article.updated_at|date:"M j, Y g:i a"|default:"Not saved yet" }}</td>
+            <td class="article-action" data-label="Action">
+              <a href="{{ article.edit_url }}">Edit article</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td class="article-empty" colspan="5">No articles yet. Use “Add article” to create the first one.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if advanced_pages_url %}
+      <p class="content-advanced">
+        Need the technical page tree? <a href="{{ advanced_pages_url }}">Open advanced page manager</a>.
+      </p>
+    {% endif %}
+  </div>
+{% endblock %}

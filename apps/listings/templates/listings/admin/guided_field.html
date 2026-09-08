@@ -1,0 +1,6 @@
+<div class="guided-field{% if wide %} guided-field--wide{% endif %}">
+  {{ field.errors }}
+  <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+  {{ field }}
+  {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+</div>

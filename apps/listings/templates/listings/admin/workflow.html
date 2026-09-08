@@ -1,15 +1,26 @@
 {% extends "wagtailadmin/base.html" %}
-{% block titletag %}Listing workflow{% endblock %}
+{% block titletag %}Listings{% endblock %}
+{% block extra_css %}{{ block.super }}
+<style>
+  .listing-workflow-header .w-header__main{padding:1.5rem 5rem 0}
+  .workflow-shell{padding-top:1.75rem;padding-bottom:3rem}.workflow-intro{max-width:760px;margin-bottom:1.75rem}.workflow-intro p{margin-top:0;color:var(--w-color-text-context)}.workflow-guide{max-width:850px;margin:1.5rem 0}.listing-links{display:flex;flex-wrap:wrap;gap:.25rem .45rem}.listing-links a+a::before{content:"·";margin-right:.45rem;color:var(--w-color-text-context)}
+  @media(max-width:1100px){
+    .workflow-table,.workflow-table tbody{display:block;width:100%}.workflow-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.workflow-table tbody{display:grid;gap:1rem}.workflow-table tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem 1rem;padding:1rem;border:1px solid var(--w-color-border-furniture);border-radius:.4rem;background:var(--w-color-surface-page)}.workflow-table tbody td{display:block;width:auto;padding:0;border:0;white-space:normal;overflow-wrap:anywhere}.workflow-table tbody td[data-label]::before{content:attr(data-label);display:block;margin-bottom:.2rem;color:var(--w-color-text-context);font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.workflow-table .listing-primary,.workflow-table .listing-price,.workflow-table .listing-actions{grid-column:1/-1}.workflow-table .listing-primary::before,.workflow-table .listing-empty::before{display:none}.workflow-table .listing-primary strong{font-size:1rem}.workflow-table .listing-primary small{display:block;margin:.2rem 0 .45rem;color:var(--w-color-text-context)}.workflow-table .listing-actions form{margin:0}.workflow-table .listing-actions .button{min-height:2.25rem;padding:.55rem .9rem}
+  }
+  @media(max-width:50em){.listing-workflow-header .w-header__main{padding:1rem 1rem 0 4.5rem}.workflow-shell{padding-top:1.25rem}.workflow-intro{margin-bottom:1.35rem}.workflow-guide{margin:1.25rem 0}}
+</style>
+{% endblock %}
 {% block content %}
-<header class="w-header"><div class="w-header__main"><h1>Listing workflow</h1><p>Create the listing and its offer, then publish it here. Archived records can be restored as drafts.</p></div></header>
-<div class="nice-padding">
-  <p><a class="button" href="{% url 'wagtailsnippets_listings_listing:add' %}">Create draft listing</a> <a class="button button-secondary" href="{% url 'wagtailsnippets_listings_offer:add' %}">Add sale or rental offer</a></p>
-  <table class="listing"><thead><tr><th>Listing</th><th>Offer</th><th>Public status</th><th>Workflow</th><th>Actions</th></tr></thead><tbody>
-  {% for listing in listings %}<tr><td><a href="{% url 'wagtailsnippets_listings_listing:edit' listing.pk %}"><strong>{{ listing.title }}</strong></a></td><td>{% with offer=listing.offers.all|first %}{% if offer %}{{ offer.get_transaction_type_display }} · {{ offer.display_price }}{% else %}<a href="{% url 'wagtailsnippets_listings_offer:add' %}">Add required offer</a>{% endif %}{% endwith %}</td><td>{{ listing.get_public_status_display }}</td><td>{{ listing.get_workflow_status_display }}</td><td>
+<header class="w-header listing-workflow-header"><div class="w-header__main"><h1>Listings</h1><p>Create, review, publish, and archive customer-facing properties from one place.</p></div></header>
+<div class="nice-padding workflow-shell">
+  <div class="workflow-intro"><p>Add a property and its customer-facing details, price, and availability in one guided form.</p><a class="button" href="{% url 'lala_guided_listing_add' %}">Add property listing</a></div>
+  <details class="workflow-guide"><summary><strong>How the records fit together</strong></summary><p>A <strong>development</strong> is a subdivision, condominium, or memorial park. A <strong>house model</strong> is a reusable design inside a development. A <strong>property listing</strong> is what customers see; the guided form creates its internal property and price records automatically.</p><p><a href="{% url 'wagtailsnippets_properties_development:list' %}">Manage developments</a> · <a href="{% url 'wagtailsnippets_properties_variant:list' %}">Manage house models</a> · <a href="{% url 'wagtailsnippets_properties_location:list' %}">Manage locations</a></p></details>
+  <table class="listing workflow-table"><thead><tr><th>Listing</th><th>Price &amp; availability</th><th>Public status</th><th>Workflow</th><th>Actions</th></tr></thead><tbody>
+  {% for listing in listings %}<tr><td class="listing-primary"><strong>{{ listing.title }}</strong><small>{% if listing.inventory_mode == 'POOLED' %}Several units · {{ listing.variant.name }}{% else %}Specific property{% endif %}</small><div class="listing-links"><a href="{% url 'lala_guided_listing_edit' listing.pk %}">Edit listing</a><a href="{% url 'wagtailsnippets_media_library_cataloguemedia:add' %}{% if listing.property_id %}?property={{ listing.property_id }}{% else %}?variant={{ listing.variant_id }}{% endif %}">Add photos</a></div></td><td class="listing-price" data-label="Price &amp; availability">{% with offer=listing.offers.all|first %}{% if offer %}{{ offer.get_transaction_type_display }} · {{ offer.display_price }}{% else %}<a href="{% url 'lala_guided_listing_edit' listing.pk %}">Add required price</a>{% endif %}{% endwith %}</td><td data-label="Public status">{{ listing.get_public_status_display }}</td><td data-label="Workflow">{{ listing.get_workflow_status_display }}</td><td class="listing-actions" data-label="Action">
     {% if listing.workflow_status == 'ARCHIVED' %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'restore' %}">{% csrf_token %}<button class="button button-small" type="submit">Restore as draft</button></form>
     {% elif listing.workflow_status == 'PUBLISHED' %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'archive' %}">{% csrf_token %}<button class="button button-small button-secondary" type="submit">Archive</button></form>
     {% else %}<form method="post" action="{% url 'lala_listing_action' listing.pk 'publish' %}">{% csrf_token %}<button class="button button-small" type="submit">Publish</button></form>{% endif %}
-  </td></tr>{% empty %}<tr><td colspan="5">No listings yet.</td></tr>{% endfor %}
+  </td></tr>{% empty %}<tr><td class="listing-empty" colspan="5">No listings yet.</td></tr>{% endfor %}
   </tbody></table>
 </div>
 {% endblock %}

@@ -1,0 +1,19 @@
+@media (max-width: 600px) {
+  .lala-mobile-catalogue-form #header-title {
+    max-width: 100%;
+    padding-left: 2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .lala-mobile-catalogue-form #header-title > .icon {
+    left: 0;
+  }
+
+  .lala-mobile-catalogue-form #w-editor-form,
+  .lala-mobile-catalogue-form #w-editor-form input,
+  .lala-mobile-catalogue-form #w-editor-form textarea,
+  .lala-mobile-catalogue-form #w-editor-form select {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}

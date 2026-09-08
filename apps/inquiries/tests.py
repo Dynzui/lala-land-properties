@@ -47,7 +47,7 @@ def inquiry_data(**overrides):
         "phone": "+63 917 123 4567",
         "interest": Inquiry.Interest.FIRST_HOME,
         "preferred_location": "Bacolod",
-        "budget": "PHP 3–5M",
+        "budget": "3000000",
         "timeline": "Within six months",
         "message": "I would like help finding a home.",
         "consent": "on",
@@ -95,6 +95,22 @@ def test_phone_only_submission_is_accepted(client):
     inquiry = Inquiry.objects.get()
     assert inquiry.email == ""
     assert inquiry.phone == "0917 123 4567"
+
+
+def test_public_budget_accepts_numbers_and_rejects_letters(client):
+    response = client.post(reverse("inquiries:contact"), inquiry_data(budget="4500000"))
+
+    assert response.status_code == 302
+    assert Inquiry.objects.get().budget == "4500000"
+
+    response = client.post(
+        reverse("inquiries:contact"),
+        inquiry_data(email="another@example.test", budget="PHP 4.5M"),
+    )
+
+    assert response.status_code == 200
+    assert b"Enter a whole number" in response.content
+    assert Inquiry.objects.count() == 1
 
 
 def test_submission_requires_email_or_valid_phone(client):

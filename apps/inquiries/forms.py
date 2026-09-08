@@ -6,6 +6,19 @@ from .models import Inquiry
 
 class PublicInquiryForm(forms.ModelForm):
     website = forms.CharField(required=False, widget=forms.HiddenInput)
+    budget = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Budget (₱)",
+        widget=forms.NumberInput(
+            attrs={
+                "min": "1",
+                "step": "1000",
+                "inputmode": "numeric",
+                "placeholder": "e.g. 3000000",
+            }
+        ),
+    )
     consent = forms.BooleanField(
         label="I agree that Lala Land may use these details to respond to my inquiry."
     )
@@ -33,7 +46,6 @@ class PublicInquiryForm(forms.ModelForm):
                 attrs={"autocomplete": "tel", "placeholder": "+63 9xx xxx xxxx"}
             ),
             "preferred_location": forms.TextInput(attrs={"placeholder": "e.g. Bacolod"}),
-            "budget": forms.TextInput(attrs={"placeholder": "e.g. ₱3M–₱5M"}),
             "timeline": forms.TextInput(attrs={"placeholder": "e.g. Within six months"}),
             "message": forms.Textarea(attrs={"rows": 5}),
         }

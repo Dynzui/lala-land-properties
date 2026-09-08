@@ -11,6 +11,7 @@ from .models import CatalogueMedia
 def media_snapshot(media: CatalogueMedia) -> dict:
     return {
         "image_id": media.image_id,
+        "kind": media.kind,
         "property_id": str(media.property_id) if media.property_id else None,
         "variant_id": str(media.variant_id) if media.variant_id else None,
         "development_id": str(media.development_id) if media.development_id else None,
@@ -37,7 +38,9 @@ def record_media_change(
     )
 
 
-def media_for_listing(listing) -> list[CatalogueMedia]:
+def media_for_listing(
+    listing, *, kind: str = CatalogueMedia.Kind.PHOTO
+) -> list[CatalogueMedia]:
     targets = []
     if listing.property_id:
         targets.append({"property_id": listing.property_id})
@@ -51,7 +54,7 @@ def media_for_listing(listing) -> list[CatalogueMedia]:
     for target in targets:
         media = list(
             CatalogueMedia.objects.active()
-            .filter(**target)
+            .filter(kind=kind, **target)
             .select_related("image")
             .order_by("-is_cover", "sort_order", "created_at")
         )

@@ -306,6 +306,8 @@ class Offer(models.Model):
     ]
 
     class Meta:
+        verbose_name = "price and availability"
+        verbose_name_plural = "prices and availability"
         ordering = ["-active", "-created_at"]
         constraints = [
             models.UniqueConstraint(

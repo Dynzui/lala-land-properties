@@ -4,9 +4,20 @@ from django.urls import path, reverse
 from wagtail.admin.menu import MenuItem
 from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
-from .admin_views import listing_action, listing_workflow
+from apps.accounts.capabilities import Capability
+
+from .admin_views import guided_listing_create, guided_listing_edit, listing_action, listing_workflow
 from .models import Listing, Offer
 from .services import record_listing_change, serialize_record
+
+
+class CapabilityMenuItem(MenuItem):
+    def __init__(self, *args, capability, **kwargs):
+        self.capability = capability
+        super().__init__(*args, **kwargs)
+
+    def is_shown(self, request):
+        return request.user.has_capability(self.capability)
 
 
 class ListingCreateView(CreateView):
@@ -73,13 +84,49 @@ register_snippet(Offer, viewset=OfferViewSet)
 def register_listing_admin_urls():
     return [
         path("listing-workflow/", listing_workflow, name="lala_listing_workflow"),
+        path("listing-workflow/add/", guided_listing_create, name="lala_guided_listing_add"),
+        path("listing-workflow/<uuid:listing_id>/edit/", guided_listing_edit, name="lala_guided_listing_edit"),
         path("listing-workflow/<uuid:listing_id>/<str:action>/", listing_action, name="lala_listing_action"),
     ]
 
 
 @hooks.register("register_admin_menu_item")
 def register_listing_workflow_menu_item():
-    return MenuItem("Listing workflow", reverse("lala_listing_workflow"), icon_name="doc-full", order=210)
+    return CapabilityMenuItem(
+        "Listings",
+        reverse("lala_listing_workflow"),
+        icon_name="doc-full",
+        order=210,
+        capability=Capability.LISTING_MANAGE,
+    )
+
+
+@hooks.register("register_admin_menu_item")
+def register_development_menu_item():
+    return CapabilityMenuItem(
+        "Developments",
+        reverse("wagtailsnippets_properties_development:list"),
+        icon_name="home",
+        order=220,
+        capability=Capability.PROPERTY_MANAGE,
+    )
+
+
+@hooks.register("register_admin_menu_item")
+def register_site_settings_menu_item():
+    return CapabilityMenuItem(
+        "Site settings",
+        reverse("wagtailsnippets_sitecontent_sitecontactsettings:list"),
+        icon_name="cog",
+        order=800,
+        capability=Capability.GLOBAL_CONTENT_MANAGE,
+    )
+
+
+@hooks.register("construct_main_menu")
+def hide_technical_snippet_menu(request, menu_items):
+    """Keep normalized records accessible from guided links, not the main sidebar."""
+    menu_items[:] = [item for item in menu_items if item.name != "snippets"]
 
 
 @hooks.register("before_edit_snippet")

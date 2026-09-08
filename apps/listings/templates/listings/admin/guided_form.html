@@ -1,0 +1,74 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}{% if listing %}Edit {{ listing.title }}{% else %}Add property listing{% endif %}{% endblock %}
+{% block extra_css %}{{ block.super }}
+<style>
+  .guided-shell{max-width:1100px;padding-top:1.75rem;padding-bottom:3rem}.guided-intro{max-width:760px;margin:0 0 1.25rem;color:var(--w-color-text-context)}
+  .guided-step{margin:1.5rem 0;padding:1.5rem;background:var(--w-color-surface-page);border:1px solid var(--w-color-border-furniture);border-radius:.35rem}
+  .guided-step h2{margin:0 0 .25rem}.guided-step>p{margin:.25rem 0 1.25rem;color:var(--w-color-text-context)}
+  .guided-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}
+  .guided-field--wide{grid-column:1/-1}.guided-field label{display:block;margin-bottom:.35rem;font-weight:700}
+  .guided-field input:not([type=radio]):not([type=checkbox]),.guided-field select,.guided-field textarea{width:100%}
+  .guided-field .help{margin:.35rem 0 0;color:var(--w-color-text-context);font-size:.85rem}
+  .guided-field .errorlist{color:var(--w-color-critical-200)}.guided-actions{position:sticky;bottom:0;padding:1rem 0;background:var(--w-color-surface-page)}
+  .guided-shortcut{display:flex;gap:.75rem;flex-wrap:wrap;margin:0 0 2rem}
+  @media(max-width:700px){.guided-grid{grid-template-columns:1fr}.guided-field--wide{grid-column:1}}
+</style>
+{% endblock %}
+{% block content %}
+<header class="w-header"><div class="w-header__main"><h1>{% if listing %}Edit {{ listing.title }}{% else %}Add property listing{% endif %}</h1><p>One form manages the customer-facing listing, its inventory record, and its sale or rental price.</p></div></header>
+<div class="nice-padding guided-shell">
+  <p class="guided-intro"><strong>You do not need to create a Property or Price &amp; availability record separately.</strong> Use a house model only when a development sells several interchangeable units of the same design.</p>
+  <div class="guided-shortcut"><a href="{% url 'wagtailsnippets_properties_location:add' %}" class="button button-secondary">Add a new location</a><a href="{% url 'wagtailsnippets_properties_development:add' %}" class="button button-secondary">Add a new development</a><a href="{% url 'wagtailsnippets_properties_variant:add' %}" class="button button-secondary">Add a house model</a></div>
+  <form method="post" novalidate>{% csrf_token %}
+    {% if form.non_field_errors %}<div class="help-block help-critical">{{ form.non_field_errors }}</div>{% endif %}
+    <section class="guided-step"><h2>What customers will see</h2><p>Write the public title and description.</p><div class="guided-grid">
+      {% include "listings/admin/guided_field.html" with field=form.title %}
+      {% include "listings/admin/guided_field.html" with field=form.summary wide=True %}
+      {% include "listings/admin/guided_field.html" with field=form.description wide=True %}
+    </div></section>
+    <section class="guided-step" data-step="arrangement"><h2>How this property is arranged</h2><p>Choose the everyday description that best fits.</p><div class="guided-grid">
+      {% include "listings/admin/guided_field.html" with field=form.arrangement wide=True %}
+      {% include "listings/admin/guided_field.html" with field=form.development %}
+      {% include "listings/admin/guided_field.html" with field=form.house_model %}
+      {% include "listings/admin/guided_field.html" with field=form.available_quantity %}
+    </div></section>
+    <section class="guided-step" data-step="details"><h2>Location and property details</h2><p>For pooled units, the selected house model supplies these details.</p><div class="guided-grid">
+      {% include "listings/admin/guided_field.html" with field=form.property_type %}
+      {% include "listings/admin/guided_field.html" with field=form.location %}
+      {% include "listings/admin/guided_field.html" with field=form.bedrooms %}
+      {% include "listings/admin/guided_field.html" with field=form.bathrooms %}
+      {% include "listings/admin/guided_field.html" with field=form.parking_spaces %}
+      {% include "listings/admin/guided_field.html" with field=form.furnishing %}
+      {% include "listings/admin/guided_field.html" with field=form.floor_area_sqm %}
+      {% include "listings/admin/guided_field.html" with field=form.lot_area_sqm %}
+    </div></section>
+    <section class="guided-step"><h2>Sale or rental price</h2><p>This replaces the separate Offer step.</p><div class="guided-grid">
+      {% include "listings/admin/guided_field.html" with field=form.transaction_type %}
+      {% include "listings/admin/guided_field.html" with field=form.price_display %}
+      {% include "listings/admin/guided_field.html" with field=form.price_min %}
+      {% include "listings/admin/guided_field.html" with field=form.price_max %}
+      {% include "listings/admin/guided_field.html" with field=form.rent_period %}
+    </div></section>
+    <section class="guided-step"><h2>Availability</h2><p>{% if listing %}Update what customers should understand about its availability.{% else %}The new listing is saved as a draft so it can be reviewed before publishing.{% endif %}</p><div class="guided-grid">
+      {% include "listings/admin/guided_field.html" with field=form.public_status %}
+      {% include "listings/admin/guided_field.html" with field=form.featured %}
+    </div></section>
+    <div class="guided-actions"><button class="button" type="submit">{% if listing %}Save changes{% else %}Save draft listing{% endif %}</button> <a class="button button-secondary" href="{% url 'lala_listing_workflow' %}">Cancel</a></div>
+  </form>
+</div>
+<script>
+(() => {
+  const radios = document.querySelectorAll('input[name="arrangement"]');
+  const quantity = document.getElementById('id_available_quantity')?.closest('.guided-field');
+  const development = document.getElementById('id_development')?.closest('.guided-field');
+  const details = document.querySelector('[data-step="details"]');
+  const update = () => {
+    const pooled = document.querySelector('input[name="arrangement"]:checked')?.value === 'POOLED';
+    if (quantity) quantity.hidden = !pooled;
+    if (development) development.hidden = pooled;
+    if (details) details.hidden = pooled;
+  };
+  radios.forEach(radio => radio.addEventListener('change', update)); update();
+})();
+</script>
+{% endblock %}

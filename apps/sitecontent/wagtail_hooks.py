@@ -1,10 +1,18 @@
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import path, reverse
 from wagtail import hooks
+from wagtail.admin.menu import MenuItem
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
+from apps.accounts.capabilities import Capability
 from apps.audittrail.models import AuditEvent
+from home.models import HomePage
 
+from .admin_views import content_dashboard
 from .models import AboutPage, ArticleCategory, ArticlePage, SiteContactSettings
+from .models import ResourceIndexPage
 
 
 def request_actor(request):
@@ -23,6 +31,58 @@ class ArticleCategoryViewSet(SnippetViewSet):
 
 register_snippet(ArticleCategory, viewset=ArticleCategoryViewSet)
 register_snippet(SiteContactSettings)
+
+
+class ContentMenuItem(MenuItem):
+    def is_shown(self, request):
+        return request.user.has_capability(Capability.ARTICLE_MANAGE)
+
+
+@hooks.register("register_admin_urls")
+def register_content_admin_urls():
+    return [
+        path("website-content/", content_dashboard, name="lala_content_dashboard"),
+    ]
+
+
+@hooks.register("register_admin_menu_item")
+def register_content_menu_item():
+    return ContentMenuItem(
+        "Website content",
+        reverse("lala_content_dashboard"),
+        icon_name="doc-full",
+        order=200,
+    )
+
+
+@hooks.register("construct_main_menu")
+def replace_page_explorer_with_content_dashboard(request, menu_items):
+    if request.user.has_capability(Capability.ARTICLE_MANAGE):
+        menu_items[:] = [
+            item
+            for item in menu_items
+            if item.name not in {"explorer", "pages"} and item.label != "Pages"
+        ]
+
+
+def _protect_essential_page(request, page, action):
+    if isinstance(page.specific, (HomePage, AboutPage, ResourceIndexPage)):
+        messages.error(
+            request,
+            f"{page.title} is an essential website page and cannot be {action}.",
+        )
+        return redirect("lala_content_dashboard")
+    return None
+
+
+@hooks.register("before_delete_page")
+def prevent_essential_page_deletion(request, page):
+    return _protect_essential_page(request, page, "deleted")
+
+
+@hooks.register("before_move_page")
+def prevent_essential_page_move(request, page, destination):  # noqa: ARG001
+    return _protect_essential_page(request, page, "moved")
 
 
 @hooks.register("after_create_snippet")

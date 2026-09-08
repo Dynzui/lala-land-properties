@@ -1,30 +1,37 @@
-{% extends "base.html" %}{% load wagtailimages_tags %}
-{% load static %}{% block title %}{{ listing.title }}{% endblock %}{% block meta_description %}{{ listing.summary }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/properties.css' %}">{% endblock %}
+{% extends "base.html" %}{% load wagtailimages_tags wagtailcore_tags static %}
+{% block title %}{{ listing.title }}{% endblock %}{% block meta_description %}{{ listing.summary }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/properties.css' %}?v=6">{% endblock %}
 {% block content %}
 <main class="property-detail">
   <a class="back-link" href="{% url 'listings:index' %}">← Back to properties</a>
   <article class="detail-hero">
-    <div class="detail-image">{% if cover_media %}{% image cover_media.image fill-1200x1000 as hero_image %}<img src="{{ hero_image.url }}" width="{{ hero_image.width }}" height="{{ hero_image.height }}" alt="{{ cover_media.alt_text }}">{% else %}<span class="visually-hidden">No property photograph is available yet.</span>{% endif %}</div>
+    <div class="detail-image">{% if cover_media %}{% image cover_media.image fill-1400x1100 as hero_image %}<img src="{{ hero_image.url }}" width="{{ hero_image.width }}" height="{{ hero_image.height }}" alt="{{ cover_media.alt_text }}">{% else %}<span class="visually-hidden">No property photograph is available yet.</span>{% endif %}</div>
     <div class="detail-copy">
       <p class="eyebrow">{{ listing.get_public_status_display }} · {{ public_listing.location.public_label }}</p>
-      <h1>{{ listing.title }}</h1><p>{{ listing.summary }}</p>
-      <div class="detail-meta">
-        <div><small>Offer</small>{% if active_offer.transaction_type == "RENT" %}For rent{% else %}For sale{% endif %}</div>
-        <div><small>Price</small>{{ active_offer.display_price }}</div>
-        <div><small>Property type</small>{{ property_target.property_type.name }}</div>
-        {% if property_target.bedrooms is not None %}<div><small>Bedrooms</small>{{ property_target.bedrooms }}</div>{% endif %}
-        {% if property_target.bathrooms is not None %}<div><small>Bathrooms</small>{{ property_target.bathrooms }}</div>{% endif %}
-        {% if property_target.floor_area_sqm is not None %}<div><small>Floor area</small>{{ property_target.floor_area_sqm }} m²</div>{% endif %}
-        {% if property_target.lot_area_sqm is not None %}<div><small>Lot area</small>{{ property_target.lot_area_sqm }} m²</div>{% endif %}
-      </div>
-      <div>{{ listing.description|safe }}</div>
+      <h1>{{ listing.title }}</h1>{% if active_offer %}<p class="detail-price">{{ active_offer.display_price }}</p>{% endif %}
+      <p class="detail-summary">{{ listing.summary }}</p><div class="detail-description">{{ listing.description|richtext }}</div>
       <a class="button" href="{% url 'listings:inquiry' listing.pk %}">I’m interested in this property</a>
     </div>
   </article>
-  {% if public_listing.location.latitude and public_listing.location.longitude %}
-  <section class="public-location" aria-labelledby="location-heading"><div><p class="eyebrow">Location</p><h2 id="location-heading">Explore the <em>area.</em></h2><p>{{ public_listing.location.public_label }}{% if public_listing.location.visibility == "APPROXIMATE" %} · Pin shown approximately for privacy.{% endif %}</p></div><a class="button button-light" href="https://www.openstreetmap.org/?mlat={{ public_listing.location.latitude }}&mlon={{ public_listing.location.longitude }}#map=15/{{ public_listing.location.latitude }}/{{ public_listing.location.longitude }}" target="_blank" rel="noopener noreferrer">View map</a></section>
-  {% endif %}
-  {% if gallery|length > 1 %}<section class="property-gallery" aria-labelledby="gallery-heading"><div><p class="eyebrow">Property gallery</p><h2 id="gallery-heading">Take a closer <em>look.</em></h2></div><div class="gallery-grid">{% for media in gallery|slice:"1:" %}<figure>{% image media.image fill-900x650 as gallery_image %}<img src="{{ gallery_image.url }}" width="{{ gallery_image.width }}" height="{{ gallery_image.height }}" alt="{{ media.alt_text }}" loading="lazy">{% if media.caption %}<figcaption>{{ media.caption }}</figcaption>{% endif %}</figure>{% endfor %}</div></section>{% endif %}
+
+  {% if gallery %}<section class="property-gallery" aria-label="Property gallery">
+    <div class="section-heading-row"><p class="eyebrow">Property gallery</p><div class="carousel-controls"><button type="button" data-carousel-prev="property-gallery-track" aria-label="Previous property photos">←</button><button type="button" data-carousel-next="property-gallery-track" aria-label="Next property photos">→</button></div></div>
+    <div class="gallery-carousel"><div class="gallery-track" id="property-gallery-track">{% for media in gallery %}{% image media.image fill-1100x760 as gallery_image %}{% image media.image max-2400x1800 as full_image %}<button class="gallery-slide" type="button" data-full-src="{{ full_image.url }}" data-alt="{{ media.alt_text }}" data-caption="{{ media.caption }}"><img src="{{ gallery_image.url }}" width="{{ gallery_image.width }}" height="{{ gallery_image.height }}" alt="{{ media.alt_text }}" {% if not forloop.first %}loading="lazy"{% endif %}></button>{% endfor %}</div><button class="gallery-open-floating" type="button" data-gallery-open>View full gallery</button></div>
+  </section>
+  <dialog class="gallery-dialog" id="gallery-dialog" aria-label="Full property gallery"><button class="gallery-dialog-close" type="button" aria-label="Close gallery">×</button><button class="gallery-dialog-nav gallery-dialog-prev" type="button" aria-label="Previous photo">←</button><figure><img src="" alt=""><figcaption></figcaption></figure><button class="gallery-dialog-nav gallery-dialog-next" type="button" aria-label="Next photo">→</button></dialog>{% endif %}
+
+  <section class="property-information" aria-label="Floor plan and property details">
+    {% if floor_plans %}<div class="floor-plan-panel"><p class="eyebrow">Floor plan</p>{% for media in floor_plans %}<figure {% if not forloop.first %}hidden{% endif %}>{% image media.image max-1400x1100 as plan_image %}{% image media.image max-2400x1800 as full_plan_image %}<button class="floor-plan-zoom" type="button" aria-label="View floor plan full size" data-floor-plan-src="{{ full_plan_image.url }}" data-floor-plan-alt="{{ media.alt_text }}" data-floor-plan-caption="{{ media.caption }}"><img src="{{ plan_image.url }}" width="{{ plan_image.width }}" height="{{ plan_image.height }}" alt="{{ media.alt_text }}" loading="lazy"></button>{% if media.caption %}<figcaption>{{ media.caption }}</figcaption>{% endif %}</figure>{% endfor %}</div>{% endif %}
+    <div class="property-specifications {% if not floor_plans %}property-specifications-wide{% endif %}"><p class="eyebrow">Property details</p>
+      <dl class="detail-meta">{% if active_offer %}<div><dt>Offer</dt><dd>{{ active_offer.get_transaction_type_display }}</dd></div><div><dt>Price</dt><dd>{{ active_offer.display_price }}</dd></div>{% endif %}<div><dt>Property type</dt><dd>{{ property_target.property_type.name }}</dd></div><div><dt>Availability</dt><dd>{{ listing.get_public_status_display }}</dd></div>{% if property_target.bedrooms is not None %}<div><dt>Bedrooms</dt><dd>{{ property_target.bedrooms }}</dd></div>{% endif %}{% if property_target.bathrooms is not None %}<div><dt>Bathrooms</dt><dd>{{ property_target.bathrooms }}</dd></div>{% endif %}{% if property_target.parking_spaces is not None %}<div><dt>Parking</dt><dd>{{ property_target.parking_spaces }} space{{ property_target.parking_spaces|pluralize }}</dd></div>{% endif %}{% if property_target.floor_area_sqm is not None %}<div><dt>Floor area</dt><dd>{{ property_target.floor_area_sqm }} m²</dd></div>{% endif %}{% if property_target.lot_area_sqm is not None %}<div><dt>Lot area</dt><dd>{{ property_target.lot_area_sqm }} m²</dd></div>{% endif %}{% if property_target.furnishing %}<div><dt>Furnishing</dt><dd>{{ property_target.get_furnishing_display }}</dd></div>{% endif %}{% if property_target.memorial_capacity is not None %}<div><dt>Capacity</dt><dd>{{ property_target.memorial_capacity }}</dd></div>{% endif %}</dl>
+      <a class="button" href="{% url 'listings:inquiry' listing.pk %}">Ask about this property</a>
+    </div>
+  </section>
+  {% if floor_plans %}<dialog class="gallery-dialog floor-plan-dialog" id="floor-plan-dialog" aria-label="Full-size floor plan"><button class="gallery-dialog-close floor-plan-dialog-close" type="button" aria-label="Close floor plan">×</button><figure><img src="" alt=""><figcaption></figcaption></figure></dialog>{% endif %}
+
+  {% if public_listing.location.latitude and public_listing.location.longitude %}<section class="public-location" aria-labelledby="location-heading"><div><p class="eyebrow">Location</p><h2 id="location-heading">Explore the <em>area.</em></h2><p>{{ public_listing.location.public_label }}{% if public_listing.location.visibility == "APPROXIMATE" %} · Pin shown approximately for privacy.{% endif %}</p></div><a class="button button-light" href="https://www.openstreetmap.org/?mlat={{ public_listing.location.latitude }}&mlon={{ public_listing.location.longitude }}#map=15/{{ public_listing.location.latitude }}/{{ public_listing.location.longitude }}" target="_blank" rel="noopener noreferrer">View map</a></section>{% endif %}
+
+  {% if similar_listings %}<section class="similar-properties" aria-labelledby="similar-heading"><div class="section-heading-row"><div><p class="eyebrow">You may also like</p><h2 id="similar-heading">Similar <em>places.</em></h2></div><div class="carousel-controls"><button type="button" data-carousel-prev="similar-listings-track" aria-label="Previous similar listings">←</button><button type="button" data-carousel-next="similar-listings-track" aria-label="Next similar listings">→</button></div></div><div class="similar-track" id="similar-listings-track">{% for similar in similar_listings %}<article class="listing-card similar-card"><a href="{% url 'listings:detail' similar.slug %}"><div class="listing-card-image">{% if similar.card_media %}{% image similar.card_media.image fill-720x480 as similar_image %}<img src="{{ similar_image.url }}" width="{{ similar_image.width }}" height="{{ similar_image.height }}" alt="{{ similar.card_media.alt_text }}" loading="lazy">{% endif %}<span class="status-pill">{{ similar.get_public_status_display }}</span></div><div class="listing-card-body"><p class="eyebrow">{{ similar.public_location.public_label }}</p><h3>{{ similar.title }}</h3><div class="card-facts"><span>{{ similar.property_type_label }}</span>{% if similar.bedrooms_label is not None %}<span>{{ similar.bedrooms_label }} bed{{ similar.bedrooms_label|pluralize }}</span>{% endif %}</div>{% if similar.active_offer %}<p class="listing-price">{{ similar.active_offer.display_price }}</p>{% endif %}<span class="text-link">View property <b>→</b></span></div></a></article>{% endfor %}</div></section>{% endif %}
 </main>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/property-detail.js' %}?v=1" defer></script>{% endblock %}

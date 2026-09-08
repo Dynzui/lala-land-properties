@@ -13,7 +13,13 @@ from .services import record_catalog_change, serialize_catalog_record
 CATALOG_MODELS = (PropertyType, Location, Development, Variant, Property)
 
 
-class PropertyTypeViewSet(SnippetViewSet):
+class MobileCatalogueIndexMixin:
+    index_template_name = "properties/admin/catalogue_index.html"
+    create_template_name = "properties/admin/catalogue_create.html"
+    edit_template_name = "properties/admin/catalogue_edit.html"
+
+
+class PropertyTypeViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = PropertyType
     icon = "tag"
     list_display = ["name", "active", "sort_order", "updated_at"]
@@ -22,7 +28,7 @@ class PropertyTypeViewSet(SnippetViewSet):
     ordering = ["sort_order", "name"]
 
 
-class LocationViewSet(SnippetViewSet):
+class LocationViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = Location
     icon = "site"
     list_display = ["public_label", "visibility", "city_municipality", "province"]
@@ -34,7 +40,7 @@ class LocationViewSet(SnippetViewSet):
         return LocationAdminForm
 
 
-class DevelopmentViewSet(SnippetViewSet):
+class DevelopmentViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = Development
     icon = "home"
     list_display = ["name", "development_type", "status", "updated_at"]
@@ -42,7 +48,7 @@ class DevelopmentViewSet(SnippetViewSet):
     search_fields = ["name", "summary", "developer_name"]
     ordering = ["name"]
 
-class VariantViewSet(SnippetViewSet):
+class VariantViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = Variant
     icon = "list-ul"
     list_display = ["name", "development", "property_type", "status", "updated_at"]
@@ -51,7 +57,7 @@ class VariantViewSet(SnippetViewSet):
     ordering = ["development__name", "name"]
 
 
-class PropertyViewSet(SnippetViewSet):
+class PropertyViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = Property
     icon = "key"
     list_display = [

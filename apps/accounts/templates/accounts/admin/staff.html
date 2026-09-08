@@ -1,5 +1,58 @@
-{% extends "wagtailadmin/base.html" %}{% block titletag %}Staff management{% endblock %}{% block content %}
-<header class="w-header"><div class="w-header__main"><h1>Staff management</h1><p>Owner-only access controls. Role and status changes immediately invalidate active sessions.</p></div></header>
-<div class="nice-padding"><section><h2>Invite staff</h2><form method="post">{% csrf_token %}{{ invitation_form.as_p }}<button class="button" type="submit">Create invitation</button></form>{% if invitation_link %}<p><strong>One-time invitation link:</strong><br><input value="{{ invitation_link }}" readonly style="width:100%"></p>{% endif %}</section>
-<section><h2>Current staff</h2><table class="listing"><thead><tr><th>Account</th><th>Role</th><th>Status</th><th>Change role</th><th>Change access</th></tr></thead><tbody>{% for member in staff %}<tr><td>{{ member.email }}</td><td>{{ member.get_role_display }}</td><td>{{ member.get_status_display }}</td><td><form method="post" action="{% url 'lala_staff_action' member.pk 'role' %}">{% csrf_token %}<select name="role">{% for value,label in role_choices %}<option value="{{ value }}"{% if member.role == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button button-small">Update</button></form></td><td><form method="post" action="{% url 'lala_staff_action' member.pk 'status' %}">{% csrf_token %}<select name="status">{% for value,label in status_choices %}<option value="{{ value }}"{% if member.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button button-small button-secondary">Apply</button></form></td></tr>{% empty %}<tr><td colspan="5">No staff accounts.</td></tr>{% endfor %}</tbody></table></section>
-<section><h2>Recent invitations</h2><table class="listing"><thead><tr><th>Email</th><th>Role</th><th>Created</th><th>State</th><th></th></tr></thead><tbody>{% for invite in invitations %}<tr><td>{{ invite.email }}</td><td>{{ invite.get_role_display }}</td><td>{{ invite.created_at }}</td><td>{% if invite.accepted_at %}Accepted{% elif invite.revoked_at %}Revoked{% elif invite.is_usable %}Active{% else %}Expired{% endif %}</td><td>{% if invite.is_usable %}<form method="post" action="{% url 'lala_revoke_invitation' invite.pk %}">{% csrf_token %}<button class="button button-small button-secondary">Revoke</button></form>{% endif %}</td></tr>{% empty %}<tr><td colspan="5">No invitations.</td></tr>{% endfor %}</tbody></table></section></div>{% endblock %}
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Staff management{% endblock %}
+{% block extra_css %}{{ block.super }}
+<style>
+  .staff-shell{max-width:1120px;padding-top:1.5rem;padding-bottom:3rem}
+  .staff-header .w-header__main{padding:1.5rem 5rem 0}
+  .staff-section{margin-bottom:2rem;padding:1.5rem;background:var(--w-color-surface-page);border:1px solid var(--w-color-border-furniture);border-radius:.4rem}
+  .staff-section h2{margin-top:0}.invite-form{display:grid;grid-template-columns:minmax(16rem,2fr) minmax(11rem,1fr) auto;align-items:end;gap:1rem;max-width:850px}
+  .staff-field label{display:block;margin-bottom:.35rem;font-weight:700}.staff-field input,.staff-field select{width:100%}.staff-field .errorlist{color:var(--w-color-critical-200)}
+  .invitation-link{margin-top:1.25rem;padding:1rem;background:var(--w-color-surface-field)}.invitation-link input{width:100%;margin-top:.5rem}
+  .staff-table-wrap{overflow-x:auto}.staff-table{min-width:760px}.staff-actions{display:flex;align-items:center;gap:.5rem}.staff-actions select{min-width:9.5rem}
+  .staff-account{font-weight:700;overflow-wrap:anywhere}.staff-muted{color:var(--w-color-text-context);font-size:.85rem}
+  @media(max-width:1100px){
+    .staff-header .w-header__main{padding:1.25rem 2rem 0 5rem}
+    .invite-form{grid-template-columns:1fr;max-width:36rem}.invite-form .button{justify-self:start}
+    .staff-table-wrap{overflow:visible}.staff-table,.staff-table tbody{display:block;min-width:0;width:100%}.staff-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .staff-table tbody{display:grid;gap:1rem}.staff-table tbody tr{display:grid;gap:.85rem;padding:1rem;border:1px solid var(--w-color-border-furniture);border-radius:.35rem}.staff-table tbody td{display:block;width:auto;padding:0;border:0;overflow-wrap:anywhere}
+    .staff-table tbody td[data-label]::before{content:attr(data-label);display:block;margin-bottom:.2rem;color:var(--w-color-text-context);font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+    .staff-table tbody td.staff-empty::before{display:none}.staff-actions{display:grid;grid-template-columns:minmax(0,1fr) auto}.staff-actions select{width:100%;min-width:0}
+  }
+  @media(max-width:800px){.staff-header .w-header__main{padding:1rem 1rem 0 4.5rem}.staff-section{padding:1rem}}
+  @media(max-width:520px){.staff-actions{grid-template-columns:1fr}.staff-actions .button{justify-self:start}}
+</style>
+{% endblock %}
+{% block content %}
+<header class="w-header staff-header"><div class="w-header__main"><h1>Staff management</h1><p>Owner-only access controls. Role and status changes immediately invalidate active sessions.</p></div></header>
+<div class="nice-padding staff-shell">
+  <section class="staff-section">
+    <h2>Invite staff</h2>
+    <p class="staff-muted">Create a private, one-time invitation for a new Admin or Maintainer.</p>
+    <form class="invite-form" method="post">{% csrf_token %}
+      <div class="staff-field">{{ invitation_form.email.errors }}<label for="{{ invitation_form.email.id_for_label }}">Email address</label>{{ invitation_form.email }}</div>
+      <div class="staff-field">{{ invitation_form.role.errors }}<label for="{{ invitation_form.role.id_for_label }}">Role</label>{{ invitation_form.role }}</div>
+      <button class="button" type="submit">Create invitation</button>
+      {% if invitation_form.non_field_errors %}<div class="help-block help-critical">{{ invitation_form.non_field_errors }}</div>{% endif %}
+    </form>
+    {% if invitation_link %}<div class="invitation-link"><strong>One-time invitation link</strong><p class="staff-muted">Copy this link now. The raw token is not stored.</p><input value="{{ invitation_link }}" readonly aria-label="One-time invitation link"></div>{% endif %}
+  </section>
+
+  <section class="staff-section">
+    <h2>Current staff</h2>
+    <div class="staff-table-wrap"><table class="listing staff-table"><thead><tr><th>Account</th><th>Current access</th><th>Change role</th><th>Change status</th></tr></thead><tbody>
+      {% for member in staff %}<tr>
+        <td class="staff-account" data-label="Account">{{ member.email }}</td><td data-label="Current access">{{ member.get_role_display }}<br><span class="staff-muted">{{ member.get_status_display }}</span></td>
+        <td data-label="Change role"><form class="staff-actions" method="post" action="{% url 'lala_staff_action' member.pk 'role' %}">{% csrf_token %}<select name="role" aria-label="New role for {{ member.email }}">{% for value,label in role_choices %}<option value="{{ value }}"{% if member.role == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button button-small">Update role</button></form></td>
+        <td data-label="Change status"><form class="staff-actions" method="post" action="{% url 'lala_staff_action' member.pk 'status' %}">{% csrf_token %}<select name="status" aria-label="New status for {{ member.email }}">{% for value,label in status_choices %}<option value="{{ value }}"{% if member.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button button-small button-secondary">Apply status</button></form></td>
+      </tr>{% empty %}<tr><td class="staff-empty" colspan="4">No staff accounts.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <section class="staff-section">
+    <h2>Recent invitations</h2>
+    <div class="staff-table-wrap"><table class="listing staff-table"><thead><tr><th>Email</th><th>Role</th><th>Created</th><th>State</th><th>Action</th></tr></thead><tbody>
+      {% for invite in invitations %}<tr><td data-label="Email">{{ invite.email }}</td><td data-label="Role">{{ invite.get_role_display }}</td><td data-label="Created">{{ invite.created_at }}</td><td data-label="State">{% if invite.accepted_at %}Accepted{% elif invite.revoked_at %}Revoked{% elif invite.is_usable %}Active{% else %}Expired{% endif %}</td><td data-label="Action">{% if invite.is_usable %}<form method="post" action="{% url 'lala_revoke_invitation' invite.pk %}">{% csrf_token %}<button class="button button-small button-secondary">Revoke</button></form>{% else %}<span class="staff-muted">No action needed</span>{% endif %}</td></tr>{% empty %}<tr><td class="staff-empty" colspan="5">No invitations.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

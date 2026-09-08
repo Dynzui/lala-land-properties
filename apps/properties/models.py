@@ -404,6 +404,8 @@ class Variant(ArchivableModel):
     ]
 
     class Meta:
+        verbose_name = "house model"
+        verbose_name_plural = "house models"
         ordering = ["development", "name"]
         constraints = [
             models.UniqueConstraint(

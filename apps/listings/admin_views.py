@@ -7,6 +7,7 @@ from wagtail.admin.auth import require_admin_access
 from apps.accounts.capabilities import Capability
 
 from .models import Listing
+from .admin_forms import GuidedListingForm
 from .services import archive_listing, publish_listing, restore_listing
 
 
@@ -20,6 +21,46 @@ def listing_workflow(request):
     _require_listing_access(request.user)
     listings = Listing.objects.select_related("property", "variant").prefetch_related("offers")
     return render(request, "listings/admin/workflow.html", {"listings": listings})
+
+
+@require_admin_access
+def guided_listing_create(request):
+    _require_listing_access(request.user)
+    form = GuidedListingForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        listing = form.save(actor=request.user)
+        messages.success(
+            request,
+            f"{listing.title} was saved as a draft with its property details and price.",
+        )
+        return redirect("lala_listing_workflow")
+    return render(request, "listings/admin/guided_form.html", {"form": form})
+
+
+@require_admin_access
+def guided_listing_edit(request, listing_id):
+    _require_listing_access(request.user)
+    listing = get_object_or_404(
+        Listing.objects.select_related(
+            "property__location",
+            "property__property_type",
+            "property__development",
+            "property__variant",
+            "variant__development",
+            "variant__property_type",
+        ).prefetch_related("offers"),
+        pk=listing_id,
+    )
+    form = GuidedListingForm(request.POST or None, listing=listing)
+    if request.method == "POST" and form.is_valid():
+        listing = form.save(actor=request.user)
+        messages.success(request, f"{listing.title} was updated successfully.")
+        return redirect("lala_listing_workflow")
+    return render(
+        request,
+        "listings/admin/guided_form.html",
+        {"form": form, "listing": listing},
+    )
 
 
 @require_POST

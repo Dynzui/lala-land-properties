@@ -1,16 +1,27 @@
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
+from wagtail.snippets.views.snippets import CreateView
 
 from .models import CatalogueMedia
+
+
+class CatalogueMediaCreateView(CreateView):
+    def get_initial(self):
+        initial = super().get_initial()
+        for target in ("property", "variant", "development"):
+            if self.request.GET.get(target):
+                initial[target] = self.request.GET[target]
+        return initial
 from .services import media_snapshot, record_media_change
 
 
 class CatalogueMediaViewSet(SnippetViewSet):
     model = CatalogueMedia
+    add_view_class = CatalogueMediaCreateView
     icon = "image"
-    list_display = ["image", "target", "is_cover", "sort_order", "updated_at"]
-    list_filter = ["is_cover", "property", "variant", "development"]
+    list_display = ["image", "kind", "target", "is_cover", "sort_order", "updated_at"]
+    list_filter = ["kind", "is_cover", "property", "variant", "development"]
     search_fields = ["image__title", "alt_text", "caption"]
     ordering = ["property", "variant", "development", "sort_order"]
 
