@@ -184,9 +184,11 @@ Categories organize Resources articles, such as Homebuyer Guides or Property Tip
 - Set **Active** off to hide the category from normal filtering without deleting its articles.
 - Use sort order to arrange categories.
 
-### Social contact settings
+### Contact page settings
 
 This single record stores Lala Land's real Facebook, Instagram, TikTok, Messenger, and WhatsApp links. Leave an unsupported service blank. Test every URL after changing it.
+
+The private **Inquiry notification email** receives one alert whenever a customer submits a new inquiry. The alert links directly to the protected CMS record and does not include the customer's phone number. Leave this field blank to disable alerts. Delivery successes and failures appear in the Audit log; a mail failure never discards the customer's saved inquiry.
 
 ## 4. Listings review and publishing
 

@@ -21,7 +21,7 @@ dev = [
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "lala_land.settings.test"
 python_files = ["test_*.py", "tests.py"]
-testpaths = ["apps", "home"]
+testpaths = ["apps", "home", "lala_land"]
 addopts = "-ra --strict-markers"
 
 [tool.ruff]

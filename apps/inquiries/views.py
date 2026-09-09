@@ -10,6 +10,7 @@ from django.utils import timezone
 from apps.access_requests.models import SensitiveAccessRequest
 from apps.access_requests.services import user_has_sensitive_access
 from apps.audittrail.models import AuditEvent
+from apps.integrations.services import notify_new_inquiry
 from apps.listings.models import Listing
 
 from .forms import PublicInquiryForm
@@ -80,6 +81,7 @@ def contact(request):
                     target_id=str(inquiry.pk),
                     metadata={"listing_id": str(listing.pk) if listing else None},
                 )
+                notify_new_inquiry(inquiry)
             else:
                 inquiry = duplicate
                 AuditEvent.objects.create(

@@ -67,4 +67,4 @@ settings file.
 
 ## Production rules
 
-Production requires PostgreSQL, an explicit secret key, and explicit allowed hosts. Migrations are a separate release step; the application container must not silently migrate the production database at startup.
+Production requires PostgreSQL, an explicit secret key, explicit allowed hosts, and an SMTP host for inquiry alerts. Set the sender and SMTP values shown in `.env.example`, then set the private alert recipient under **Website content → Contact page settings** in the CMS. Migrations are a separate release step; the application container must not silently migrate the production database at startup.

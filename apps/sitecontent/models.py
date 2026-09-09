@@ -57,9 +57,7 @@ class SiteContactSettings(models.Model):
     panel_emphasis = models.CharField(max_length=80, default="next place.")
     exploring_text = models.TextField(
         max_length=300,
-        default=(
-            "Share what you know so far. It is completely fine if you are still exploring."
-        ),
+        default=("Share what you know so far. It is completely fine if you are still exploring."),
     )
     service_area = models.CharField(max_length=120, default="Serving Negros Occidental")
     affiliation = models.CharField(
@@ -72,6 +70,12 @@ class SiteContactSettings(models.Model):
     )
     public_email = models.EmailField(blank=True)
     public_phone = models.CharField(max_length=40, blank=True)
+    inquiry_notification_email = models.EmailField(
+        blank=True,
+        help_text=(
+            "Private recipient for new inquiry alerts. Leave blank to disable email alerts."
+        ),
+    )
     facebook_url = models.URLField(blank=True)
     instagram_url = models.URLField(blank=True)
     tiktok_url = models.URLField(blank=True)
@@ -99,8 +103,9 @@ class SiteContactSettings(models.Model):
                 FieldPanel("response_expectation"),
                 FieldPanel("public_email"),
                 FieldPanel("public_phone"),
+                FieldPanel("inquiry_notification_email"),
             ],
-            heading="Contact details and response expectations",
+            heading="Contact details, response expectations, and inquiry alerts",
         ),
         MultiFieldPanel(
             [
