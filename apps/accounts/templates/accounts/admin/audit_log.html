@@ -4,97 +4,37 @@
 {% block extra_css %}
   {{ block.super }}
   <style>
-    .audit-log-header .w-header__main {
-      padding: 1.5rem 5rem 0;
-    }
-
-    .audit-log-shell {
-      padding-top: 1.75rem;
-      padding-bottom: 3rem;
-    }
-
-    .audit-target-id {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: .8rem;
-    }
-
-    @media (max-width: 1100px) {
-      .audit-log-table,
-      .audit-log-table tbody {
-        display: block;
-        width: 100%;
-      }
-
-      .audit-log-table thead {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      }
-
-      .audit-log-table tbody {
-        display: grid;
-        gap: 1rem;
-      }
-
-      .audit-log-table tbody tr {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: .9rem 1rem;
-        padding: 1rem;
-        border: 1px solid var(--w-color-border-furniture);
-        border-radius: .4rem;
-        background: var(--w-color-surface-page);
-      }
-
-      .audit-log-table tbody td {
-        display: block;
-        width: auto;
-        padding: 0;
-        border: 0;
-        white-space: normal;
-        overflow-wrap: anywhere;
-      }
-
-      .audit-log-table tbody td[data-label]::before {
-        content: attr(data-label);
-        display: block;
-        margin-bottom: .2rem;
-        color: var(--w-color-text-context);
-        font-size: .68rem;
-        font-weight: 600;
-        letter-spacing: .06em;
-        text-transform: uppercase;
-      }
-
-      .audit-when,
-      .audit-action,
-      .audit-empty {
-        grid-column: 1 / -1;
-      }
-
-      .audit-action {
-        font-weight: 600;
-      }
-
-      .audit-empty::before {
-        display: none !important;
-      }
-    }
+    .audit-log-header .w-header__main { padding: 2rem 5rem 0; }
+    .audit-log-shell { max-width: 72rem; padding-top: 1.75rem; padding-bottom: 3rem; }
+    .audit-list { display: grid; gap: 1rem; }
+    .audit-card { padding: 1.35rem 1.5rem; border: 1px solid var(--w-color-border-furniture); border-radius: .45rem; background: var(--w-color-surface-page); }
+    .audit-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+    .audit-time { display: block; margin-bottom: .35rem; color: var(--w-color-text-context); font-size: .78rem; }
+    .audit-card h2 { margin: 0; font-size: 1.15rem; }
+    .audit-description { margin: .35rem 0 0; color: var(--w-color-text-context); }
+    .audit-status { flex: 0 0 auto; padding: .3rem .6rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+    .audit-status-success { color: #052e16; background: #bbf7d0; }
+    .audit-status-critical { color: #450a0a; background: #fecaca; }
+    .audit-summary { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: 1rem; font-size: .82rem; }
+    .audit-summary span { color: var(--w-color-text-context); }
+    .audit-summary strong { color: var(--w-color-text-label); }
+    .audit-open { display: inline-block; margin-top: 1rem; }
+    .audit-details { margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--w-color-border-furniture); }
+    .audit-details summary { width: fit-content; cursor: pointer; color: var(--w-color-text-link-default); font-size: .78rem; }
+    .audit-technical { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .35rem 1rem; margin: .75rem 0 0; font-size: .76rem; }
+    .audit-technical dt { color: var(--w-color-text-context); font-weight: 600; }
+    .audit-technical dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .audit-empty { padding: 2rem; text-align: center; border: 1px solid var(--w-color-border-furniture); border-radius: .45rem; }
 
     @media (max-width: 50em) {
-      .audit-log-header .w-header__main {
-        padding: 1rem 1rem 0 4.5rem;
-      }
-
-      .audit-log-shell {
-        padding-top: 1.25rem;
-      }
+      .audit-log-header .w-header__main { padding: 1.25rem 1rem 0 4.5rem; }
+      .audit-log-shell { padding-top: 1.25rem; }
+      .audit-card { padding: 1rem; }
+      .audit-card-header { display: grid; gap: .75rem; }
+      .audit-status { width: fit-content; }
+      .audit-summary { display: grid; gap: .45rem; }
+      .audit-technical { grid-template-columns: 1fr; gap: .15rem; }
+      .audit-technical dd + dt { margin-top: .45rem; }
     }
   </style>
 {% endblock %}
@@ -103,36 +43,39 @@
   <header class="w-header audit-log-header">
     <div class="w-header__main">
       <h1>Audit log</h1>
-      <p>Owner-only, append-only record of security-sensitive staff activity.</p>
+      <p>A permanent Owner-only history of important activity. Related inquiry and email events are grouped for easier reading.</p>
     </div>
   </header>
 
   <div class="nice-padding audit-log-shell">
-    <table class="listing audit-log-table">
-      <thead>
-        <tr>
-          <th>When</th>
-          <th>Actor</th>
-          <th>Action</th>
-          <th>Record type</th>
-          <th>Record ID</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for event in events %}
-          <tr>
-            <td class="audit-when" data-label="When">{{ event.created_at }}</td>
-            <td data-label="Actor">{{ event.actor|default:"System" }}</td>
-            <td class="audit-action" data-label="Action">{{ event.action }}</td>
-            <td data-label="Record type">{{ event.target_type }}</td>
-            <td class="audit-target-id" data-label="Record ID">{{ event.target_id }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td class="audit-empty" colspan="5">No audit events.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="audit-list">
+      {% for entry in entries %}
+        <article class="audit-card">
+          <div class="audit-card-header">
+            <div>
+              <time class="audit-time" datetime="{{ entry.event.created_at|date:'c' }}">{{ entry.event.created_at }}</time>
+              <h2>{{ entry.title }}</h2>
+              <p class="audit-description">{{ entry.description }}</p>
+            </div>
+            {% if entry.status %}<span class="audit-status audit-status-{{ entry.status_tone }}">{{ entry.status }}</span>{% endif %}
+          </div>
+          <div class="audit-summary">
+            <span>By <strong>{{ entry.event.actor|default:"System" }}</strong></span>
+            <span>Record <strong>{{ entry.record_label }}</strong></span>
+          </div>
+          {% if entry.record_url %}<a class="button button-small audit-open" href="{{ entry.record_url }}">Open inquiry</a>{% endif %}
+          <details class="audit-details">
+            <summary>Technical details</summary>
+            <dl class="audit-technical">
+              <dt>Action</dt><dd>{{ entry.event.action }}</dd>
+              <dt>Record type</dt><dd>{{ entry.event.target_type }}</dd>
+              <dt>Record ID</dt><dd>{{ entry.event.target_id|default:"—" }}</dd>
+            </dl>
+          </details>
+        </article>
+      {% empty %}
+        <p class="audit-empty">No audit activity has been recorded yet.</p>
+      {% endfor %}
+    </div>
   </div>
 {% endblock %}
