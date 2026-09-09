@@ -100,6 +100,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "lala_land.wsgi.application"
+DEFAULT_EXCEPTION_REPORTER_FILTER = "lala_land.security.HardenedExceptionReporterFilter"
 
 
 # Database

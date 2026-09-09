@@ -1,8 +1,11 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem
+from wagtail.permission_policies.base import ModelPermissionPolicy
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet
 
@@ -11,8 +14,7 @@ from apps.audittrail.models import AuditEvent
 from home.models import HomePage
 
 from .admin_views import content_dashboard
-from .models import AboutPage, ArticleCategory, ArticlePage, SiteContactSettings
-from .models import ResourceIndexPage
+from .models import AboutPage, ArticleCategory, ArticlePage, ResourceIndexPage, SiteContactSettings
 
 
 def request_actor(request):
@@ -26,11 +28,36 @@ class ArticleCategoryViewSet(SnippetViewSet):
     list_filter = ["active"]
     search_fields = ["name", "description"]
     ordering = ["sort_order", "name"]
-    sort_order_field = "sort_order"
+
+
+class GlobalContentPermissionPolicy(ModelPermissionPolicy):
+    """Keep global website copy owner-only, even when a URL is opened directly."""
+
+    def user_has_permission(self, user, action):  # noqa: ARG002
+        return user.is_active and (
+            user.is_superuser or user.has_capability(Capability.GLOBAL_CONTENT_MANAGE)
+        )
+
+    def users_with_any_permission(self, actions):  # noqa: ARG002
+        user_model = get_user_model()
+        return user_model.objects.filter(
+            Q(is_superuser=True) | Q(role=user_model.Role.OWNER),
+            is_active=True,
+        ).distinct()
+
+
+class SiteContactSettingsViewSet(SnippetViewSet):
+    model = SiteContactSettings
+    icon = "mail"
+    menu_label = "Contact page settings"
+
+    @property
+    def permission_policy(self):
+        return GlobalContentPermissionPolicy(self.model)
 
 
 register_snippet(ArticleCategory, viewset=ArticleCategoryViewSet)
-register_snippet(SiteContactSettings)
+register_snippet(SiteContactSettings, viewset=SiteContactSettingsViewSet)
 
 
 class ContentMenuItem(MenuItem):
@@ -83,6 +110,11 @@ def prevent_essential_page_deletion(request, page):
 @hooks.register("before_move_page")
 def prevent_essential_page_move(request, page, destination):  # noqa: ARG001
     return _protect_essential_page(request, page, "moved")
+
+
+@hooks.register("before_unpublish_page")
+def prevent_essential_page_unpublish(request, page):
+    return _protect_essential_page(request, page, "unpublished")
 
 
 @hooks.register("after_create_snippet")

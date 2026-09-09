@@ -37,7 +37,7 @@ def content_dashboard(request):
     content_cards = [
         {
             "name": "Home page",
-            "description": "The main landing page customers see first.",
+            "description": "Hero text, introductions, resource headings, and calls to action.",
             "status": _page_status(home) if home else "Not created",
             "url": _edit_page_url(home) if can_manage_global_content else None,
             "action": "Edit home page",
@@ -58,8 +58,8 @@ def content_dashboard(request):
             "action": "Edit Resources page",
         },
         {
-            "name": "Contact and social links",
-            "description": "Facebook, Instagram, TikTok, Messenger, and WhatsApp links.",
+            "name": "Contact page",
+            "description": "Page text, response expectations, contact details, and social links.",
             "status": "Configured" if contact else "Not configured",
             "url": (
                 reverse(
@@ -69,7 +69,7 @@ def content_dashboard(request):
                 if contact and can_manage_global_content
                 else None
             ),
-            "action": "Edit contact links",
+            "action": "Edit contact page",
             "owner_only": not can_manage_global_content,
         },
     ]

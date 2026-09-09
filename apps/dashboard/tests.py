@@ -63,6 +63,53 @@ def test_priority_zero_role_boundaries_in_admin(client):
         assert "/account/login/" in response.url
 
 
+def test_owner_primary_cms_routes_are_healthy(client):
+    user_model = get_user_model()
+    owner = make_user(user_model.Role.OWNER, "cms-smoke-owner")
+    force_verified_login(client, owner)
+    route_names = [
+        "wagtailadmin_home",
+        "lala_content_dashboard",
+        "lala_listing_workflow",
+        "wagtailsnippets_properties_development:list",
+        "lala_inquiry_dashboard",
+        "lala_staff_dashboard",
+        "lala_audit_log",
+        "wagtailsnippets_sitecontent_articlecategory:list",
+        "wagtailsnippets_sitecontent_sitecontactsettings:list",
+    ]
+
+    for route_name in route_names:
+        response = client.get(reverse(route_name))
+        assert response.status_code == 200, route_name
+
+
+def test_admin_primary_cms_routes_and_owner_boundaries_are_healthy(client):
+    user_model = get_user_model()
+    admin = make_user(user_model.Role.ADMIN, "cms-smoke-admin")
+    force_verified_login(client, admin)
+    allowed_routes = [
+        "wagtailadmin_home",
+        "lala_content_dashboard",
+        "lala_listing_workflow",
+        "wagtailsnippets_properties_development:list",
+        "lala_inquiry_dashboard",
+        "wagtailsnippets_sitecontent_articlecategory:list",
+    ]
+    owner_only_routes = [
+        "lala_staff_dashboard",
+        "lala_audit_log",
+        "wagtailsnippets_sitecontent_sitecontactsettings:list",
+    ]
+
+    for route_name in allowed_routes:
+        response = client.get(reverse(route_name))
+        assert response.status_code == 200, route_name
+    for route_name in owner_only_routes:
+        response = client.get(reverse(route_name))
+        assert response.status_code in {302, 403}, route_name
+
+
 def test_priority_zero_property_to_inquiry_lifecycle(client):
     location, _, property_record = make_catalogue()
     owner = make_owner()

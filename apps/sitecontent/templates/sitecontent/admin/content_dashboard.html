@@ -53,19 +53,27 @@
     }
 
     .content-card-footer {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
-      justify-content: space-between;
       gap: .75rem;
       margin-top: auto;
     }
 
+    .content-card-footer .button {
+      grid-column: 2;
+      justify-self: center;
+    }
+
     .content-status {
+      grid-column: 1;
       font-size: .8rem;
       font-weight: 600;
     }
 
     .owner-note {
+      grid-column: 3;
+      justify-self: end;
       color: var(--w-color-text-context);
       font-size: .8rem;
     }

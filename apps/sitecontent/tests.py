@@ -87,6 +87,21 @@ def test_homepage_links_to_about_page(client):
     assert about.url.encode() in response.content
 
 
+def test_homepage_renders_owner_editable_copy(client):
+    home = HomePage.objects.get()
+    home.hero_eyebrow = "A custom owner-managed welcome"
+    home.hero_primary_cta = "See available homes"
+    home.resources_heading = "Helpful property lessons"
+    home.save()
+
+    response = client.get(home.url)
+
+    assert response.status_code == 200
+    assert b"A custom owner-managed welcome" in response.content
+    assert b"See available homes" in response.content
+    assert b"Helpful property lessons" in response.content
+
+
 def test_resource_index_only_shows_live_non_archived_articles(client):
     visible = make_article()
     make_article(
@@ -261,6 +276,23 @@ def test_social_contact_settings_are_singleton_and_render_when_configured(client
     assert b"https://tiktok.com/@lalaland.example" in response.content
 
 
+def test_contact_page_renders_owner_editable_copy_and_details(client):
+    settings = SiteContactSettings.objects.get(pk=1)
+    settings.hero_eyebrow = "Talk with the Lala Land team"
+    settings.response_expectation = "Expect a reply within one business day."
+    settings.public_email = "hello@lalaland.example"
+    settings.public_phone = "+63 917 555 0101"
+    settings.save()
+
+    response = client.get("/contact/")
+
+    assert response.status_code == 200
+    assert b"Talk with the Lala Land team" in response.content
+    assert b"Expect a reply within one business day." in response.content
+    assert b"mailto:hello@lalaland.example" in response.content
+    assert b"tel:+63 917 555 0101" in response.content
+
+
 def test_article_publication_date_falls_back_to_revision_timestamp():
     article = make_article(live=False)
 
@@ -301,6 +333,19 @@ def test_content_editor_can_open_friendly_content_dashboard(client, role):
     assert b"Add article" in response.content
 
 
+@pytest.mark.parametrize("role", ["OWNER", "ADMIN"])
+def test_content_editor_can_open_article_category_manager(client, role):
+    editor = make_content_editor(role, f"{role.lower()}-category-manager")
+    force_verified_login(client, editor)
+
+    response = client.get(
+        reverse("wagtailsnippets_sitecontent_articlecategory:list")
+    )
+
+    assert response.status_code == 200
+    assert b"Article categories" in response.content
+
+
 def test_only_owner_sees_advanced_page_manager_and_global_content_actions(client):
     user_model = get_user_model()
     owner = make_content_editor(user_model.Role.OWNER, "content-owner")
@@ -310,12 +355,69 @@ def test_only_owner_sees_advanced_page_manager_and_global_content_actions(client
     owner_response = client.get(reverse("lala_content_dashboard"))
     assert b"Open advanced page manager" in owner_response.content
     assert b"Edit home page" in owner_response.content
-    assert b"Edit contact links" in owner_response.content
+    assert b"Edit contact page" in owner_response.content
 
     force_verified_login(client, admin)
     admin_response = client.get(reverse("lala_content_dashboard"))
     assert b"Open advanced page manager" not in admin_response.content
     assert admin_response.content.count(b"Owner managed") == 2
+
+
+def test_global_home_and_contact_editors_enforce_owner_boundary(client):
+    user_model = get_user_model()
+    owner = make_content_editor(user_model.Role.OWNER, "global-content-owner")
+    admin = make_content_editor(user_model.Role.ADMIN, "global-content-admin")
+    home_url = reverse("wagtailadmin_pages:edit", args=[HomePage.objects.get().pk])
+    contact_url = reverse(
+        "wagtailsnippets_sitecontent_sitecontactsettings:edit",
+        args=[1],
+    )
+
+    force_verified_login(client, owner)
+    assert client.get(home_url).status_code == 200
+    assert client.get(contact_url).status_code == 200
+
+    force_verified_login(client, admin)
+    assert client.get(home_url).status_code in {302, 403}
+    assert client.get(contact_url).status_code in {302, 403}
+
+
+@pytest.mark.parametrize(
+    "page_model",
+    [HomePage, AboutPage, ResourceIndexPage],
+)
+def test_owner_cannot_unpublish_essential_pages(client, page_model):
+    user_model = get_user_model()
+    owner = make_content_editor(
+        user_model.Role.OWNER,
+        f"protect-{page_model._meta.model_name}",
+    )
+    page = page_model.objects.get()
+    force_verified_login(client, owner)
+
+    response = client.post(
+        reverse("wagtailadmin_pages:unpublish", args=[page.pk]),
+    )
+
+    page.refresh_from_db()
+    assert response.status_code == 302
+    assert response.url == reverse("lala_content_dashboard")
+    assert page.live is True
+
+
+def test_admin_can_still_unpublish_an_article(client):
+    user_model = get_user_model()
+    admin = make_content_editor(user_model.Role.ADMIN, "article-unpublisher")
+    article = make_article()
+    force_verified_login(client, admin)
+
+    response = client.post(
+        reverse("wagtailadmin_pages:unpublish", args=[article.pk]),
+    )
+
+    article.refresh_from_db()
+    assert response.status_code == 302
+    assert article.live is False
 
 
 def test_content_dashboard_uses_plain_language_article_status(client):

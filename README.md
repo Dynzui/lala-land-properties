@@ -29,6 +29,15 @@ This workspace uses a project-local PostgreSQL 17 runtime on port `55432`. Start
 .\scripts\start-local-postgres.ps1
 ```
 
+Start or restart a single Django development server with:
+
+```powershell
+.\scripts\run-dev-server.ps1 -Port 8000 -PostgresPort 55432
+```
+
+The restart script removes stale Python development servers already bound to that exact port,
+which prevents the browser from alternating between old and new templates.
+
 Local database settings live in the Git-ignored `lala_land/settings/local.py`. The application
 uses the restricted `lala_land` role; automated tests use the separate `lala_land_test` role.
 SQLite remains available as an explicit lightweight fallback in environments without the local

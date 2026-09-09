@@ -43,6 +43,35 @@ class ArticleCategory(models.Model):
 
 class SiteContactSettings(models.Model):
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    hero_eyebrow = models.CharField(max_length=80, default="Contact Lala")
+    hero_heading = models.TextField(max_length=140, default="Tell me what\nyou’re")
+    hero_emphasis = models.CharField(max_length=80, default="looking for.")
+    hero_intro = models.TextField(
+        max_length=400,
+        default=(
+            "No pressure and no complicated form. Share what matters to you, "
+            "and we’ll begin with a clear conversation."
+        ),
+    )
+    panel_heading = models.TextField(max_length=120, default="Let’s find your")
+    panel_emphasis = models.CharField(max_length=80, default="next place.")
+    exploring_text = models.TextField(
+        max_length=300,
+        default=(
+            "Share what you know so far. It is completely fine if you are still exploring."
+        ),
+    )
+    service_area = models.CharField(max_length=120, default="Serving Negros Occidental")
+    affiliation = models.CharField(
+        max_length=160,
+        default="Proudly affiliated with PRES Realty",
+    )
+    response_expectation = models.CharField(
+        max_length=180,
+        default="We’ll respond as soon as possible during business hours.",
+    )
+    public_email = models.EmailField(blank=True)
+    public_phone = models.CharField(max_length=40, blank=True)
     facebook_url = models.URLField(blank=True)
     instagram_url = models.URLField(blank=True)
     tiktok_url = models.URLField(blank=True)
@@ -51,24 +80,51 @@ class SiteContactSettings(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     panels = [
-        FieldPanel("facebook_url"),
-        FieldPanel("instagram_url"),
-        FieldPanel("tiktok_url"),
-        FieldPanel("messenger_url"),
-        FieldPanel("whatsapp_url"),
+        MultiFieldPanel(
+            [
+                FieldPanel("hero_eyebrow"),
+                FieldPanel("hero_heading"),
+                FieldPanel("hero_emphasis"),
+                FieldPanel("hero_intro"),
+                FieldPanel("panel_heading"),
+                FieldPanel("panel_emphasis"),
+                FieldPanel("exploring_text"),
+            ],
+            heading="Contact page copy",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("service_area"),
+                FieldPanel("affiliation"),
+                FieldPanel("response_expectation"),
+                FieldPanel("public_email"),
+                FieldPanel("public_phone"),
+            ],
+            heading="Contact details and response expectations",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("facebook_url"),
+                FieldPanel("instagram_url"),
+                FieldPanel("tiktok_url"),
+                FieldPanel("messenger_url"),
+                FieldPanel("whatsapp_url"),
+            ],
+            heading="Social media links",
+        ),
     ]
 
     class Meta:
-        verbose_name = "social contact settings"
-        verbose_name_plural = "social contact settings"
+        verbose_name = "contact page settings"
+        verbose_name_plural = "contact page settings"
 
     def __str__(self):
-        return "Lala Land social contact links"
+        return "Lala Land contact page"
 
     def save(self, *args, **kwargs):
         self.pk = 1
         if self._state.adding and type(self).objects.filter(pk=1).exists():
-            raise ValidationError("Social contact settings already exist.")
+            raise ValidationError("Contact page settings already exist.")
         return super().save(*args, **kwargs)
 
 
