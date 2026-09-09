@@ -28,6 +28,7 @@ def test_session_version_mismatch_logs_user_out():
 
     assert response.status_code == 302
     assert response.url.startswith("/account/login/")
+    assert "reason=session-expired" not in response.url
     assert "_auth_user_id" not in client.session
 
 
@@ -57,5 +58,16 @@ def test_expired_staff_session_is_logged_out(session_key, age_seconds):
     response = client.get("/admin/")
 
     assert response.status_code == 302
-    assert response.url.startswith("/account/login/")
+    assert response.url == "/account/login/?reason=session-expired&next=%2Fadmin%2F"
     assert "_auth_user_id" not in client.session
+
+    login_response = client.get(response.url)
+    assert login_response.status_code == 200
+    assert b"Your session timed out" in login_response.content
+
+
+def test_regular_login_does_not_show_session_timeout_notice():
+    response = Client().get("/account/login/")
+
+    assert response.status_code == 200
+    assert b"Your session timed out" not in response.content

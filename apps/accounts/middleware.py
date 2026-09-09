@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect
@@ -21,20 +23,32 @@ class ActiveAccountMiddleware:
             started_at = request.session.get("account_session_started_at")
             last_seen_at = request.session.get("account_session_last_seen_at")
             idle_expired = (
-                last_seen_at is None or now - last_seen_at > settings.ACCOUNT_SESSION_IDLE_SECONDS
+                last_seen_at is not None
+                and now - last_seen_at > settings.ACCOUNT_SESSION_IDLE_SECONDS
             )
             absolute_expired = (
-                started_at is None or now - started_at > settings.ACCOUNT_SESSION_ABSOLUTE_SECONDS
+                started_at is not None
+                and now - started_at > settings.ACCOUNT_SESSION_ABSOLUTE_SECONDS
             )
+            session_metadata_missing = started_at is None or last_seen_at is None
             invalid = (
                 user.status != User.Status.ACTIVE
                 or not user.is_active
                 or session_version != user.session_version
                 or idle_expired
                 or absolute_expired
+                or session_metadata_missing
             )
             if invalid:
                 logout(request)
+                if idle_expired or absolute_expired:
+                    query = urlencode(
+                        {
+                            "reason": "session-expired",
+                            "next": request.get_full_path(),
+                        }
+                    )
+                    return redirect(f"{reverse('two_factor:login')}?{query}")
                 return redirect("two_factor:login")
             request.session["account_session_last_seen_at"] = now
         return self.get_response(request)
