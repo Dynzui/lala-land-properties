@@ -353,5 +353,6 @@ Add alt text that describes the visible content of the selected image.
 - Replace placeholder social links with Lala Land's real accounts.
 - Add Lala's professionally reviewed privacy notice and legal content.
 - Use production hosting, HTTPS, PostgreSQL backups, and secure environment settings.
+- Replace the temporary inquiry notification recipient (`dynzues@gmail.com`) with the approved live business inbox before launch, then verify delivery through the production SMTP provider.
 - Test Owner and Admin accounts independently.
 - Keep recovery codes secure and separate from the website server.

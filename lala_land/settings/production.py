@@ -16,6 +16,10 @@ ALLOWED_HOSTS = [
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS is required in production")
 
+WAGTAILADMIN_BASE_URL = os.getenv("WAGTAILADMIN_BASE_URL", "").rstrip("/")
+if not WAGTAILADMIN_BASE_URL:
+    raise ImproperlyConfigured("WAGTAILADMIN_BASE_URL is required in production")
+
 if os.getenv("DATABASE_ENGINE") != "postgresql":
     raise ImproperlyConfigured("PostgreSQL is required in production")
 

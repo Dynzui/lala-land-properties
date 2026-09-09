@@ -43,6 +43,7 @@ if (netstat -ano | Select-String $listenerPattern) {
 }
 
 $env:POSTGRES_PORT = [string]$PostgresPort
+$env:WAGTAILADMIN_BASE_URL = "http://127.0.0.1:$Port"
 Set-Location -LiteralPath $repositoryRoot
 Write-Host "Starting one development server at http://127.0.0.1:$Port/"
 & $pythonPath manage.py runserver "127.0.0.1:$Port" --noreload
