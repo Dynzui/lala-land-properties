@@ -1,9 +1,22 @@
 import pytest
 
-from apps.accounts.admin_views import _audit_entries
+from apps.accounts.admin_views import _audit_entries, _audit_record_label
 from apps.audittrail.models import AuditEvent
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.mark.parametrize(
+    ("target_type", "expected"),
+    [
+        ("sitecontent.SiteContactSettings", "Contact settings"),
+        ("example.MarketingLandingPage", "Marketing landing page"),
+        ("example.APIRequest", "API request"),
+        ("example.article_category", "Article category"),
+    ],
+)
+def test_audit_record_labels_are_human_readable(target_type, expected):
+    assert _audit_record_label(target_type) == expected
 
 
 def test_audit_events_cannot_be_changed_or_deleted():

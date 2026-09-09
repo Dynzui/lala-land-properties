@@ -1,3 +1,5 @@
+import re
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
@@ -72,6 +74,19 @@ AUDIT_RECORD_LABELS = {
 }
 
 
+def _audit_record_label(target_type):
+    if target_type in AUDIT_RECORD_LABELS:
+        return AUDIT_RECORD_LABELS[target_type]
+
+    model_name = target_type.rsplit(".", 1)[-1].replace("_", " ")
+    model_name = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", model_name)
+    model_name = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", model_name)
+    words = [word if word.isupper() else word.lower() for word in model_name.split()]
+    if words and not words[0].isupper():
+        words[0] = words[0].capitalize()
+    return " ".join(words)
+
+
 def _audit_entries(events):
     events = list(events)
     submitted_ids = {event.target_id for event in events if event.action == "inquiry.submitted"}
@@ -117,10 +132,7 @@ def _audit_entries(events):
                 "description": description,
                 "status": status,
                 "status_tone": status_tone,
-                "record_label": AUDIT_RECORD_LABELS.get(
-                    event.target_type,
-                    event.target_type.rsplit(".", 1)[-1].replace("_", " ").title(),
-                ),
+                "record_label": _audit_record_label(event.target_type),
                 "record_url": record_url,
             }
         )
