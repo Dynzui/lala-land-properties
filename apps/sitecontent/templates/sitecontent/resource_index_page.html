@@ -2,7 +2,7 @@
 {% load wagtailcore_tags wagtailimages_tags static %}
 {% block title %}{{ page.title }}{% endblock %}
 {% block meta_description %}Practical homebuyer guides and real estate resources from Lala Land Properties.{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/resources.css' %}?v=3">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/resources.css' %}?v=4">{% endblock %}
 {% block content %}
 <main>
     <header class="page-hero page-hero-balanced resource-hero">
@@ -17,7 +17,7 @@
         {% for article in articles %}
         <article class="article-card">
             <a href="{{ article.url }}">
-                <div class="article-card-image">
+                <div class="article-card-image{% if not article.cover_image %} article-card-placeholder{% endif %}">
                     {% if article.cover_image %}{% image article.cover_image fill-900x600 as card_image %}<img src="{{ card_image.url }}" width="{{ card_image.width }}" height="{{ card_image.height }}" alt="{{ article.cover_alt_text }}" loading="lazy">{% endif %}
                 </div>
                 <div class="article-card-body">
