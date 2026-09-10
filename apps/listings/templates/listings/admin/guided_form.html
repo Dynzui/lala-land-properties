@@ -2,6 +2,7 @@
 {% block titletag %}{% if listing %}Edit {{ listing.title }}{% else %}Add property listing{% endif %}{% endblock %}
 {% block extra_css %}{{ block.super }}
 <style>
+  .guided-form-header .w-header__main{padding:1.5rem 5rem 0}
   .guided-shell{max-width:1100px;padding-top:1.75rem;padding-bottom:3rem}.guided-intro{max-width:760px;margin:0 0 1.25rem;color:var(--w-color-text-context)}
   .guided-step{margin:1.5rem 0;padding:1.5rem;background:var(--w-color-surface-page);border:1px solid var(--w-color-border-furniture);border-radius:.35rem}
   .guided-step h2{margin:0 0 .25rem}.guided-step>p{margin:.25rem 0 1.25rem;color:var(--w-color-text-context)}
@@ -10,12 +11,14 @@
   .guided-field input:not([type=radio]):not([type=checkbox]),.guided-field select,.guided-field textarea{width:100%}
   .guided-field .help{margin:.35rem 0 0;color:var(--w-color-text-context);font-size:.85rem}
   .guided-field .errorlist{color:var(--w-color-critical-200)}.guided-actions{position:sticky;bottom:0;padding:1rem 0;background:var(--w-color-surface-page)}
-  .guided-shortcut{display:flex;gap:.75rem;flex-wrap:wrap;margin:0 0 2rem}
-  @media(max-width:700px){.guided-grid{grid-template-columns:1fr}.guided-field--wide{grid-column:1}}
+  .guided-shortcut{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;max-width:760px;margin:0 0 2rem}
+  .guided-shortcut .button{display:flex;align-items:center;justify-content:center;min-height:2.75rem;margin:0;text-align:center}
+  @media(max-width:50em){.guided-form-header .w-header__main{padding:1rem 1rem 0 4.5rem}}
+  @media(max-width:700px){.guided-grid,.guided-shortcut{grid-template-columns:1fr}.guided-field--wide{grid-column:1}.guided-shortcut{max-width:22rem}}
 </style>
 {% endblock %}
 {% block content %}
-<header class="w-header"><div class="w-header__main"><h1>{% if listing %}Edit {{ listing.title }}{% else %}Add property listing{% endif %}</h1><p>One form manages the customer-facing listing, its inventory record, and its sale or rental price.</p></div></header>
+<header class="w-header guided-form-header"><div class="w-header__main"><h1>{% if listing %}Edit {{ listing.title }}{% else %}Add property listing{% endif %}</h1><p>One form manages the customer-facing listing, its inventory record, and its sale or rental price.</p></div></header>
 <div class="nice-padding guided-shell">
   <p class="guided-intro"><strong>You do not need to create a Property or Price &amp; availability record separately.</strong> Use a house model only when a development sells several interchangeable units of the same design.</p>
   <div class="guided-shortcut"><a href="{% url 'wagtailsnippets_properties_location:add' %}" class="button button-secondary">Add a new location</a><a href="{% url 'wagtailsnippets_properties_development:add' %}" class="button button-secondary">Add a new development</a><a href="{% url 'wagtailsnippets_properties_variant:add' %}" class="button button-secondary">Add a house model</a></div>
