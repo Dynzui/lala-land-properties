@@ -67,4 +67,11 @@ settings file.
 
 ## Production rules
 
-Production requires PostgreSQL, an explicit secret key, explicit allowed hosts, and an SMTP host for inquiry alerts. Set the sender and SMTP values shown in `.env.example`, then set the private alert recipient under **Website content → Contact page settings** in the CMS. Migrations are a separate release step; the application container must not silently migrate the production database at startup.
+Production requires PostgreSQL, a persistent media volume, a secret key, an allowed public host,
+and an SMTP host for inquiry alerts. Set the sender and SMTP values shown in `.env.example`, then
+set the private alert recipient under **Website content → Contact page settings** in the CMS.
+Migrations are a separate release step; the application container must not silently migrate the
+production database at startup.
+
+The initial Render deployment is defined in `render.yaml`. See
+[`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) for the exact setup, cost, and launch checks.

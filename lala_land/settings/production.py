@@ -10,24 +10,34 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     raise ImproperlyConfigured("DJANGO_SECRET_KEY is required in production")
 
-ALLOWED_HOSTS = [
+configured_hosts = [
     host.strip() for host in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+ALLOWED_HOSTS = list(dict.fromkeys([host for host in [*configured_hosts, render_hostname] if host]))
 if not ALLOWED_HOSTS:
-    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS is required in production")
+    raise ImproperlyConfigured(
+        "DJANGO_ALLOWED_HOSTS or RENDER_EXTERNAL_HOSTNAME is required in production"
+    )
 
 WAGTAILADMIN_BASE_URL = os.getenv("WAGTAILADMIN_BASE_URL", "").rstrip("/")
+if not WAGTAILADMIN_BASE_URL and render_hostname:
+    WAGTAILADMIN_BASE_URL = f"https://{render_hostname}"
 if not WAGTAILADMIN_BASE_URL:
-    raise ImproperlyConfigured("WAGTAILADMIN_BASE_URL is required in production")
+    raise ImproperlyConfigured(
+        "WAGTAILADMIN_BASE_URL or RENDER_EXTERNAL_HOSTNAME is required in production"
+    )
 
-if os.getenv("DATABASE_ENGINE") != "postgresql":
+if not os.getenv("DATABASE_URL") and os.getenv("DATABASE_ENGINE") != "postgresql":
     raise ImproperlyConfigured("PostgreSQL is required in production")
+
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
 
 # ManifestStaticFilesStorage is recommended in production, to prevent
 # outdated JavaScript / CSS assets being served from cache
 # (e.g. after a Wagtail upgrade).
 # See https://docs.djangoproject.com/en/6.0/ref/contrib/staticfiles/#manifeststaticfilesstorage
-STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+STORAGES["staticfiles"]["BACKEND"] = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True

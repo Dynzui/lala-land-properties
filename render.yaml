@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: lala-land-properties
+    runtime: docker
+    plan: 0.5c-512mb
+    region: singapore
+    autoDeployTrigger: checksPass
+    healthCheckPath: /
+    preDeployCommand: python manage.py migrate --noinput
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: lala_land.settings.production
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lala-land-postgres
+          property: connectionString
+      - key: POSTGRES_CONN_MAX_AGE
+        value: "60"
+      - key: MEDIA_ROOT
+        value: /var/data/media
+      - key: SECURE_HSTS_SECONDS
+        value: "31536000"
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: EMAIL_USE_TLS
+        value: "true"
+      - key: EMAIL_TIMEOUT
+        value: "10"
+    disk:
+      name: lala-land-media
+      mountPath: /var/data
+      sizeGB: 1
+
+databases:
+  - name: lala-land-postgres
+    plan: 0.1c-256mb
+    region: singapore
+    postgresMajorVersion: "17"
+    databaseName: lala_land
+    user: lala_land
+    ipAllowList: []

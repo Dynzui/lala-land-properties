@@ -59,7 +59,9 @@ WORKDIR /app
 # Set this directory to be owned by the "wagtail" user. This Wagtail project
 # uses SQLite, the folder needs to be owned by the user that
 # will be writing to the database file.
-RUN chown wagtail:wagtail /app
+RUN mkdir -p /var/data/media \
+ && chown wagtail:wagtail /app \
+ && chown -R wagtail:wagtail /var/data
 
 # Copy the source code of the project into the container.
 COPY --chown=wagtail:wagtail . .
@@ -71,4 +73,4 @@ USER wagtail
 RUN python manage.py collectstatic --noinput --clear
 
 # Database migrations run as a separate, explicit release step.
-CMD ["gunicorn", "lala_land.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["sh", "-c", "gunicorn lala_land.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

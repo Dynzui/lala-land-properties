@@ -5,10 +5,12 @@ description = "Lala Land Properties public website and operations CMS"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "Django==6.0.8",
+    "dj-database-url==3.1.2",
     "wagtail==7.4.3",
     "psycopg[binary]==3.3.4",
     "gunicorn==25.1.0",
     "django-two-factor-auth[phonenumberslite]==1.18.1",
+    "whitenoise==6.12.0",
 ]
 
 [project.optional-dependencies]

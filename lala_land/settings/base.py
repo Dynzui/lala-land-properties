@@ -11,10 +11,11 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 from pathlib import Path
 
+import dj_database_url
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = PROJECT_DIR.parent
 
@@ -106,7 +107,16 @@ DEFAULT_EXCEPTION_REPORTER_FILTER = "lala_land.security.HardenedExceptionReporte
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if os.getenv("DATABASE_ENGINE", "sqlite") == "postgresql":
+database_url = os.getenv("DATABASE_URL", "").strip()
+if database_url:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            database_url,
+            conn_max_age=int(os.getenv("POSTGRES_CONN_MAX_AGE", "60")),
+            conn_health_checks=True,
+        )
+    }
+elif os.getenv("DATABASE_ENGINE", "sqlite") == "postgresql":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -174,7 +184,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
 
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "media"))
 MEDIA_URL = "/media/"
 
 AUTH_USER_MODEL = "accounts.User"
