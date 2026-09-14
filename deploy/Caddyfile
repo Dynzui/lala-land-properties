@@ -1,0 +1,13 @@
+{$SITE_DOMAIN} {
+    encode zstd gzip
+
+    handle_path /media/* {
+        root * /srv/media
+        header X-Content-Type-Options nosniff
+        file_server
+    }
+
+    handle {
+        reverse_proxy web:8000
+    }
+}

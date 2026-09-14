@@ -73,5 +73,7 @@ set the private alert recipient under **Website content → Contact page setting
 Migrations are a separate release step; the application container must not silently migrate the
 production database at startup.
 
-The initial Render deployment is defined in `render.yaml`. See
-[`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) for the exact setup, cost, and launch checks.
+The chosen launch path is a VPS using `compose.vps.yaml`. See
+[`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md) for server setup and launch checks. The earlier Render
+option remains in `render.yaml` and [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) as a fallback;
+it has not been provisioned.

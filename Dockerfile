@@ -56,9 +56,7 @@ COPY --from=builder /opt/venv /opt/venv
 # Use /app folder as a directory where the source code is stored.
 WORKDIR /app
 
-# Set this directory to be owned by the "wagtail" user. This Wagtail project
-# uses SQLite, the folder needs to be owned by the user that
-# will be writing to the database file.
+# Give the unprivileged application user access to its code and upload directory.
 RUN mkdir -p /var/data/media \
  && chown wagtail:wagtail /app \
  && chown -R wagtail:wagtail /var/data
@@ -69,8 +67,15 @@ COPY --chown=wagtail:wagtail . .
 # Use user "wagtail" to run the build commands below and the server itself.
 USER wagtail
 
-# Collect static files.
-RUN python manage.py collectstatic --noinput --clear
+# Build the production asset manifest without connecting to a real database.
+# These values are build-only placeholders, never runtime credentials.
+RUN DJANGO_SETTINGS_MODULE=lala_land.settings.production \
+    DJANGO_SECRET_KEY=build-only-placeholder-not-a-production-secret \
+    DJANGO_ALLOWED_HOSTS=build.invalid \
+    WAGTAILADMIN_BASE_URL=https://build.invalid \
+    DATABASE_URL=postgresql://build:build@localhost/build \
+    EMAIL_HOST=build.invalid \
+    python manage.py collectstatic --noinput --clear
 
 # Database migrations run as a separate, explicit release step.
-CMD ["sh", "-c", "gunicorn lala_land.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+CMD ["sh", "-c", "gunicorn lala_land.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1 --threads 2"]
