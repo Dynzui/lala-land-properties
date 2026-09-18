@@ -197,9 +197,13 @@ class Listing(models.Model):
             self.property.InventoryStatus.RESERVED,
         }:
             errors["workflow_status"] = "The selected property is not publicly available."
-        if self.property_id and self.property.development_id and (
-            self.property.development.status != self.property.development.Status.ACTIVE
-            or self.property.development.is_archived
+        if (
+            self.property_id
+            and self.property.development_id
+            and (
+                self.property.development.status != self.property.development.Status.ACTIVE
+                or self.property.development.is_archived
+            )
         ):
             errors["workflow_status"] = "Published listings require an active development."
         if self.variant_id and (

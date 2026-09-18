@@ -15,6 +15,7 @@ from .services import (
 
 pytestmark = pytest.mark.django_db
 
+
 def make_owner():
     user_model = get_user_model()
     return user_model.objects.create_user(

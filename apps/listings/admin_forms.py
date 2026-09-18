@@ -35,7 +35,10 @@ class GuidedListingForm(forms.Form):
         queryset=Development.objects.none(),
         required=False,
         empty_label="Not part of a development",
-        help_text="Optional for a specific property. The house model already determines this for pooled inventory.",
+        help_text=(
+            "Optional for a specific property. The house model already determines this "
+            "for pooled inventory."
+        ),
     )
     house_model = forms.ModelChoiceField(
         queryset=Variant.objects.none(),
@@ -63,17 +66,35 @@ class GuidedListingForm(forms.Form):
     bedrooms = forms.IntegerField(required=False, min_value=0)
     bathrooms = forms.DecimalField(required=False, min_value=0, max_digits=4, decimal_places=1)
     parking_spaces = forms.IntegerField(required=False, min_value=0)
-    floor_area_sqm = forms.DecimalField(required=False, min_value=0, max_digits=12, decimal_places=2)
+    floor_area_sqm = forms.DecimalField(
+        required=False, min_value=0, max_digits=12, decimal_places=2
+    )
     lot_area_sqm = forms.DecimalField(required=False, min_value=0, max_digits=12, decimal_places=2)
-    furnishing = forms.ChoiceField(required=False, choices=[("", "Not specified"), *Property.Furnishing.choices])
+    furnishing = forms.ChoiceField(
+        required=False, choices=[("", "Not specified"), *Property.Furnishing.choices]
+    )
 
-    transaction_type = forms.ChoiceField(choices=Offer.TransactionType.choices, label="For sale or rent")
-    price_display = forms.ChoiceField(choices=Offer.PriceDisplay.choices, label="How to show the price")
-    price_min = forms.DecimalField(required=False, min_value=1, max_digits=14, decimal_places=2, label="Price")
-    price_max = forms.DecimalField(required=False, min_value=1, max_digits=14, decimal_places=2, label="Maximum price")
-    rent_period = forms.ChoiceField(required=False, choices=[("", "Select a rental period"), *Offer.RentPeriod.choices])
-    public_status = forms.ChoiceField(choices=Listing.PublicStatus.choices, initial=Listing.PublicStatus.AVAILABLE)
-    featured = forms.BooleanField(required=False, help_text="Show this listing more prominently on the website.")
+    transaction_type = forms.ChoiceField(
+        choices=Offer.TransactionType.choices, label="For sale or rent"
+    )
+    price_display = forms.ChoiceField(
+        choices=Offer.PriceDisplay.choices, label="How to show the price"
+    )
+    price_min = forms.DecimalField(
+        required=False, min_value=1, max_digits=14, decimal_places=2, label="Price"
+    )
+    price_max = forms.DecimalField(
+        required=False, min_value=1, max_digits=14, decimal_places=2, label="Maximum price"
+    )
+    rent_period = forms.ChoiceField(
+        required=False, choices=[("", "Select a rental period"), *Offer.RentPeriod.choices]
+    )
+    public_status = forms.ChoiceField(
+        choices=Listing.PublicStatus.choices, initial=Listing.PublicStatus.AVAILABLE
+    )
+    featured = forms.BooleanField(
+        required=False, help_text="Show this listing more prominently on the website."
+    )
 
     def __init__(self, *args, listing=None, **kwargs):
         self.listing = listing
@@ -131,9 +152,9 @@ class GuidedListingForm(forms.Form):
                 )
             self.initial.update(initial)
             self.fields["arrangement"].disabled = True
-            self.fields["arrangement"].help_text = (
-                "This choice is locked after creation to preserve inventory history."
-            )
+            self.fields[
+                "arrangement"
+            ].help_text = "This choice is locked after creation to preserve inventory history."
 
     def clean(self):
         cleaned = super().clean()
@@ -145,7 +166,9 @@ class GuidedListingForm(forms.Form):
             if not model:
                 self.add_error("house_model", "Choose the house model shared by these units.")
             if cleaned.get("available_quantity") is None:
-                self.add_error("available_quantity", "Enter how many units are currently available.")
+                self.add_error(
+                    "available_quantity", "Enter how many units are currently available."
+                )
         else:
             if not cleaned.get("property_type"):
                 self.add_error("property_type", "Choose the type of this property.")
@@ -155,8 +178,14 @@ class GuidedListingForm(forms.Form):
                 self.add_error("house_model", "Choose a house model from the selected development.")
             if model and not development:
                 cleaned["development"] = model.development
-            if model and cleaned.get("property_type") and model.property_type_id != cleaned["property_type"].id:
-                self.add_error("property_type", "Property type must match the selected house model.")
+            if (
+                model
+                and cleaned.get("property_type")
+                and model.property_type_id != cleaned["property_type"].id
+            ):
+                self.add_error(
+                    "property_type", "Property type must match the selected house model."
+                )
 
         price_display = cleaned.get("price_display")
         price_min = cleaned.get("price_min")
@@ -193,9 +222,13 @@ class GuidedListingForm(forms.Form):
             variant = data["house_model"]
         else:
             model = data.get("house_model")
-            property_record = self.listing.property if self.listing else Property(
-                reference_code=f"LLP-{uuid4().hex[:8].upper()}",
-                inventory_status=Property.InventoryStatus.AVAILABLE,
+            property_record = (
+                self.listing.property
+                if self.listing
+                else Property(
+                    reference_code=f"LLP-{uuid4().hex[:8].upper()}",
+                    inventory_status=Property.InventoryStatus.AVAILABLE,
+                )
             )
             property_before = serialize_catalog_record(property_record) if self.listing else None
             property_record.development = data.get("development")
@@ -213,16 +246,23 @@ class GuidedListingForm(forms.Form):
             record_catalog_change(
                 actor=actor,
                 record=property_record,
-                action=("catalogue.property.updated" if self.listing else "catalogue.property.created"),
+                action=(
+                    "catalogue.property.updated" if self.listing else "catalogue.property.created"
+                ),
                 before=property_before,
-                change_summary=("Updated" if self.listing else "Created") + " through the guided listing form",
+                change_summary=("Updated" if self.listing else "Created")
+                + " through the guided listing form",
             )
 
         listing = self.listing or Listing(workflow_status=Listing.WorkflowStatus.DRAFT)
         listing_before = serialize_record(listing) if self.listing else None
         if not self.listing:
             slug_root = slugify(data["title"])[:190] or "property"
-            listing.slug = slug_root if not Listing.objects.filter(slug=slug_root).exists() else f"{slug_root}-{uuid4().hex[:6]}"
+            listing.slug = (
+                slug_root
+                if not Listing.objects.filter(slug=slug_root).exists()
+                else f"{slug_root}-{uuid4().hex[:6]}"
+            )
         listing.property = property_record
         listing.variant = variant
         listing.title = data["title"]

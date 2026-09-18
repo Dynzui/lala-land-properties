@@ -1,9 +1,9 @@
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet
-from wagtail.snippets.views.snippets import CreateView
+from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
 from .models import CatalogueMedia
+from .services import media_snapshot, record_media_change
 
 
 class CatalogueMediaCreateView(CreateView):
@@ -13,7 +13,6 @@ class CatalogueMediaCreateView(CreateView):
             if self.request.GET.get(target):
                 initial[target] = self.request.GET[target]
         return initial
-from .services import media_snapshot, record_media_change
 
 
 class CatalogueMediaViewSet(SnippetViewSet):

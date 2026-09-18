@@ -48,6 +48,7 @@ class DevelopmentViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     search_fields = ["name", "summary", "developer_name"]
     ordering = ["name"]
 
+
 class VariantViewSet(MobileCatalogueIndexMixin, SnippetViewSet):
     model = Variant
     icon = "list-ul"

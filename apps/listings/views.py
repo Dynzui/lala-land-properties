@@ -115,9 +115,7 @@ def listing_detail(request, slug):
         .order_by("-featured", "-published_at")[:60]
     )
     current_location = (
-        listing.property.location
-        if listing.property_id
-        else listing.variant.development.location
+        listing.property.location if listing.property_id else listing.variant.development.location
     )
     current_offer_price = active_offer.price_min if active_offer else None
     similar_listings = []

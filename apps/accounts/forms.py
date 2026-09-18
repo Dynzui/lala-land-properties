@@ -5,19 +5,25 @@ from .models import User
 
 class StaffInvitationForm(forms.Form):
     email = forms.EmailField()
-    role = forms.ChoiceField(choices=((User.Role.ADMIN, "Admin"), (User.Role.MAINTAINER, "Maintainer")))
+    role = forms.ChoiceField(
+        choices=((User.Role.ADMIN, "Admin"), (User.Role.MAINTAINER, "Maintainer"))
+    )
 
 
 class StaffRoleForm(forms.Form):
-    role = forms.ChoiceField(choices=((User.Role.ADMIN, "Admin"), (User.Role.MAINTAINER, "Maintainer")))
+    role = forms.ChoiceField(
+        choices=((User.Role.ADMIN, "Admin"), (User.Role.MAINTAINER, "Maintainer"))
+    )
 
 
 class StaffStatusForm(forms.Form):
-    status = forms.ChoiceField(choices=(
-        (User.Status.ACTIVE, "Active"),
-        (User.Status.SUSPENDED, "Suspended"),
-        (User.Status.DISABLED, "Disabled"),
-    ))
+    status = forms.ChoiceField(
+        choices=(
+            (User.Status.ACTIVE, "Active"),
+            (User.Status.SUSPENDED, "Suspended"),
+            (User.Status.DISABLED, "Disabled"),
+        )
+    )
 
 
 class AcceptStaffInvitationForm(forms.Form):

@@ -9,7 +9,6 @@ from apps.inquiries.models import Inquiry
 from apps.listings.models import Listing
 from apps.media_library.models import CatalogueMedia
 
-
 ACTIVE_INQUIRY_STATUSES = [
     Inquiry.Status.NEW,
     Inquiry.Status.CONTACTED,
@@ -33,8 +32,7 @@ def _draft_listing_rows():
         target = listing.property or listing.variant
         media = target.media.all() if target else []
         if not any(
-            item.kind == CatalogueMedia.Kind.PHOTO and item.archived_at is None
-            for item in media
+            item.kind == CatalogueMedia.Kind.PHOTO and item.archived_at is None for item in media
         ):
             reasons.append("Add a photo")
         rows.append(

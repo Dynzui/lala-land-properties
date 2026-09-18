@@ -30,9 +30,7 @@ def content_dashboard(request):
     about = AboutPage.objects.first()
     resources = ResourceIndexPage.objects.first()
     contact = SiteContactSettings.objects.filter(pk=1).first()
-    can_manage_global_content = request.user.has_capability(
-        Capability.GLOBAL_CONTENT_MANAGE
-    )
+    can_manage_global_content = request.user.has_capability(Capability.GLOBAL_CONTENT_MANAGE)
 
     content_cards = [
         {
@@ -111,13 +109,9 @@ def content_dashboard(request):
             "content_cards": content_cards,
             "articles": article_rows,
             "add_article_url": add_article_url,
-            "manage_categories_url": reverse(
-                "wagtailsnippets_sitecontent_articlecategory:list"
-            ),
+            "manage_categories_url": reverse("wagtailsnippets_sitecontent_articlecategory:list"),
             "advanced_pages_url": (
-                reverse("wagtailadmin_explore_root")
-                if can_manage_global_content
-                else None
+                reverse("wagtailadmin_explore_root") if can_manage_global_content else None
             ),
         },
     )

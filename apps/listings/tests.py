@@ -9,8 +9,8 @@ from django.urls import reverse
 from apps.audittrail.models import AuditEvent
 from apps.properties.models import Development, Location, Property, PropertyType, Variant
 
-from .models import Listing, Offer
 from .admin_forms import GuidedListingForm
+from .models import Listing, Offer
 from .services import archive_listing, publish_listing, restore_listing, set_public_status
 
 pytestmark = pytest.mark.django_db

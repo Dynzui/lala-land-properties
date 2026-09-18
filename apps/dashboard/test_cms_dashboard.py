@@ -7,7 +7,6 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from apps.inquiries.models import Inquiry
 
-
 pytestmark = pytest.mark.django_db
 
 

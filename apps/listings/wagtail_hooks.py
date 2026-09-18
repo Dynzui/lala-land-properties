@@ -1,12 +1,17 @@
-from wagtail import hooks
-from wagtail.snippets.models import register_snippet
 from django.urls import path, reverse
+from wagtail import hooks
 from wagtail.admin.menu import MenuItem
+from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import CreateView, SnippetViewSet
 
 from apps.accounts.capabilities import Capability
 
-from .admin_views import guided_listing_create, guided_listing_edit, listing_action, listing_workflow
+from .admin_views import (
+    guided_listing_create,
+    guided_listing_edit,
+    listing_action,
+    listing_workflow,
+)
 from .models import Listing, Offer
 from .services import record_listing_change, serialize_record
 
@@ -85,8 +90,16 @@ def register_listing_admin_urls():
     return [
         path("listing-workflow/", listing_workflow, name="lala_listing_workflow"),
         path("listing-workflow/add/", guided_listing_create, name="lala_guided_listing_add"),
-        path("listing-workflow/<uuid:listing_id>/edit/", guided_listing_edit, name="lala_guided_listing_edit"),
-        path("listing-workflow/<uuid:listing_id>/<str:action>/", listing_action, name="lala_listing_action"),
+        path(
+            "listing-workflow/<uuid:listing_id>/edit/",
+            guided_listing_edit,
+            name="lala_guided_listing_edit",
+        ),
+        path(
+            "listing-workflow/<uuid:listing_id>/<str:action>/",
+            listing_action,
+            name="lala_listing_action",
+        ),
     ]
 
 

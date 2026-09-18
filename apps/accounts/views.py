@@ -1,6 +1,6 @@
-from django.contrib import messages
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
 

@@ -6,8 +6,8 @@ from wagtail.admin.auth import require_admin_access
 
 from apps.accounts.capabilities import Capability
 
-from .models import Listing
 from .admin_forms import GuidedListingForm
+from .models import Listing
 from .services import archive_listing, publish_listing, restore_listing
 
 
@@ -80,7 +80,8 @@ def listing_action(request, listing_id, action):
         operation(actor=request.user, listing=listing)
     except (ValidationError, ValueError) as error:
         detail = "; ".join(
-            message for messages_for_field in getattr(error, "message_dict", {}).values()
+            message
+            for messages_for_field in getattr(error, "message_dict", {}).values()
             for message in messages_for_field
         ) or str(error)
         messages.error(request, detail)

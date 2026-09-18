@@ -38,9 +38,7 @@ def record_media_change(
     )
 
 
-def media_for_listing(
-    listing, *, kind: str = CatalogueMedia.Kind.PHOTO
-) -> list[CatalogueMedia]:
+def media_for_listing(listing, *, kind: str = CatalogueMedia.Kind.PHOTO) -> list[CatalogueMedia]:
     targets = []
     if listing.property_id:
         targets.append({"property_id": listing.property_id})

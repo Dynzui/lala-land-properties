@@ -6,9 +6,9 @@ from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
-from apps.properties.views import geography_data
 from apps.accounts.views import admin_login_redirect
 from apps.dashboard.views import cms_dashboard
+from apps.properties.views import geography_data
 from search import views as search_views
 
 urlpatterns = [

@@ -82,4 +82,3 @@ class LocationAdminForm(WagtailAdminModelForm):
     region = forms.ChoiceField(choices=(), label="Region")
     province = forms.ChoiceField(choices=(), label="Province")
     city_municipality = forms.ChoiceField(choices=(), label="City / municipality")
-

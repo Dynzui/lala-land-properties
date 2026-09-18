@@ -338,9 +338,7 @@ def test_content_editor_can_open_article_category_manager(client, role):
     editor = make_content_editor(role, f"{role.lower()}-category-manager")
     force_verified_login(client, editor)
 
-    response = client.get(
-        reverse("wagtailsnippets_sitecontent_articlecategory:list")
-    )
+    response = client.get(reverse("wagtailsnippets_sitecontent_articlecategory:list"))
 
     assert response.status_code == 200
     assert b"Article categories" in response.content
