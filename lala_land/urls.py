@@ -7,6 +7,8 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 from apps.properties.views import geography_data
+from apps.accounts.views import admin_login_redirect
+from apps.dashboard.views import cms_dashboard
 from search import views as search_views
 
 urlpatterns = [
@@ -22,6 +24,8 @@ urlpatterns = [
     path("staff/", include("apps.accounts.urls")),
     path("properties/", include("apps.listings.urls")),
     path("contact/", include("apps.inquiries.urls")),
+    path("admin/login/", admin_login_redirect, name="admin_login_redirect"),
+    path("admin/", cms_dashboard, name="lala_cms_dashboard"),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("search/", search_views.search, name="search"),

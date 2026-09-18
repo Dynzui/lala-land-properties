@@ -1,0 +1,29 @@
+{% extends "wagtailadmin/admin_base.html" %}
+{% load static i18n wagtailadmin_tags %}
+
+{% block branding_title %}Lala Land Properties{% endblock %}
+{% block bodyclass %}login lala-login lala-reset{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/admin-login.css' %}?v=3">
+{% endblock %}
+
+{% block branding_favicon %}
+  <link rel="icon" type="image/png" href="{% static 'images/lala-land-logo-original.png' %}">
+{% endblock %}
+
+{% block furniture %}
+  <main class="content-wrapper" id="main">
+    <a class="lala-login-brand" href="/" aria-label="Lala Land Properties home">
+      <img src="{% static 'images/lala-land-logo-original.png' %}" alt="">
+      <span><strong>Lala Land</strong><small>Properties</small></span>
+    </a>
+    <p class="lala-login-eyebrow">Account recovery</p>
+    {% block reset_content %}{% endblock %}
+    <p class="lala-login-note">Secure access for authorized Lala Land staff.</p>
+  </main>
+{% endblock %}

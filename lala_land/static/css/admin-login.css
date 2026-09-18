@@ -1,0 +1,271 @@
+:root {
+  --lala-navy: #13233f;
+  --lala-deep-navy: #0b172b;
+  --lala-ivory: #f6f1e7;
+  --lala-paper: #fffdf8;
+  --lala-gold: #c39a55;
+  --lala-ink: #172033;
+  --lala-muted: #697080;
+  --lala-line: #ddd5c7;
+}
+
+.lala-login {
+  min-height: 100vh;
+  background:
+    linear-gradient(90deg, rgba(11, 23, 43, .88), rgba(19, 35, 63, .7)),
+    url("../images/lala-land-hero.png") center / cover fixed;
+  color: var(--lala-ink);
+  font-family: "DM Sans", Arial, sans-serif;
+}
+
+.lala-login .wrapper {
+  min-height: 100vh;
+  padding: clamp(1rem, 5vw, 5rem);
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.lala-login .content-wrapper {
+  width: min(100%, 31rem);
+  max-width: 31rem;
+  margin: 0;
+  padding: clamp(2rem, 5vw, 3.75rem);
+  border: 0;
+  border-top: 4px solid var(--lala-gold);
+  border-radius: 0;
+  background: rgba(255, 253, 248, .98);
+  box-shadow: 0 2rem 5rem rgba(3, 11, 25, .35);
+  color: var(--lala-ink);
+}
+
+.lala-login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 2.5rem;
+  color: var(--lala-navy);
+  line-height: 1;
+  text-decoration: none;
+}
+
+.lala-login-brand img {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(195, 154, 85, .45);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.lala-login-brand strong {
+  display: block;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.2rem;
+}
+
+.lala-login-brand small {
+  display: block;
+  margin-top: .35rem;
+  font-size: .56rem;
+  letter-spacing: .23em;
+  text-transform: uppercase;
+}
+
+.lala-login .lala-login-eyebrow {
+  margin: 0 0 .65rem;
+  color: #896b38;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.lala-login h1 {
+  margin: 0 0 .85rem;
+  color: var(--lala-navy);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.45rem, 5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.05;
+  text-align: left;
+}
+
+.lala-login-intro {
+  margin: 0 0 2.25rem;
+  color: var(--lala-muted);
+  font-size: .96rem;
+  line-height: 1.65;
+}
+
+.lala-login .messages {
+  margin: 0 0 1.5rem;
+}
+
+.lala-login .messages:empty {
+  display: none;
+}
+
+.lala-login .w-field__wrapper {
+  margin-bottom: 1.35rem;
+}
+
+.lala-login .w-field__label,
+.lala-login .remember-me {
+  color: var(--lala-ink);
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.lala-login input[type="text"],
+.lala-login input[type="email"],
+.lala-login input[type="password"] {
+  min-height: 3.25rem;
+  border: 1px solid var(--lala-line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--lala-ink);
+  font-family: "DM Sans", Arial, sans-serif;
+  box-shadow: none;
+}
+
+.lala-login input:focus,
+.lala-login input:focus-visible {
+  border-color: var(--lala-gold);
+  outline: 2px solid rgba(195, 154, 85, .55) !important;
+  outline-offset: 1px;
+}
+
+.lala-login input:-webkit-autofill,
+.lala-login input:-webkit-autofill:hover,
+.lala-login input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--lala-ink);
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  caret-color: var(--lala-ink);
+}
+
+.lala-login .reset-password {
+  margin: -.6rem 0 1.6rem;
+  color: #896b38;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.lala-login .reset-password:hover {
+  color: var(--lala-navy);
+}
+
+.lala-login .remember-me {
+  margin: 1.25rem 0;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.lala-login .form-actions {
+  margin-top: 1.5rem;
+}
+
+.lala-login .form-actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  border: 1px solid var(--lala-gold);
+  border-radius: 0;
+  background: var(--lala-gold);
+  color: #fff;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.lala-login .form-actions .button:hover,
+.lala-login .form-actions .button:focus {
+  border-color: #ae8140;
+  background: #ae8140;
+  color: #fff;
+}
+
+.lala-login .form-actions .button em {
+  font-style: normal;
+}
+
+.lala-login-note {
+  margin: 2.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--lala-line);
+  color: var(--lala-muted);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  text-align: center;
+}
+
+.lala-back-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: #896b38;
+  font-size: .78rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lala-back-link:hover {
+  color: var(--lala-navy);
+}
+
+.lala-reset-status {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 1rem;
+  align-items: start;
+  margin: 1.75rem 0;
+  padding: 1.25rem;
+  border: 1px solid rgba(195, 154, 85, .45);
+  background: #fbf6ec;
+}
+
+.lala-reset-status span {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--lala-gold);
+  color: #fff;
+  font-weight: 700;
+}
+
+.lala-reset-status p,
+.lala-reset-help {
+  margin: 0;
+  color: var(--lala-muted);
+  line-height: 1.65;
+}
+
+.lala-reset-help {
+  margin-bottom: 1.75rem;
+  font-size: .82rem;
+}
+
+@media (max-width: 640px) {
+  .lala-login {
+    background-position: 62% center;
+  }
+
+  .lala-login .wrapper {
+    padding: 1rem;
+    align-items: center;
+  }
+
+  .lala-login .content-wrapper {
+    padding: 2rem 1.5rem;
+  }
+
+  .lala-login-brand {
+    margin-bottom: 2rem;
+  }
+}

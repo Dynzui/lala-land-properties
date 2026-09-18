@@ -1,0 +1,10 @@
+{% extends "two_factor/_base_focus.html" %}
+
+{% block title %}Two-factor authentication enabled{% endblock %}
+
+{% block content %}
+  <h1>Your account is protected.</h1>
+  <div class="lala-auth-success"><span aria-hidden="true">✓</span><p>Two-factor authentication has been enabled successfully.</p></div>
+  <p class="lala-auth-intro">Keep your authenticator app and recovery codes somewhere safe. You’ll use them to verify future sign-ins.</p>
+  <a href="/admin/" class="btn btn-primary btn-block">Continue to administration</a>
+{% endblock %}

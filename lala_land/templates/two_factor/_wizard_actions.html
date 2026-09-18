@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="lala-auth-actions">
+  {% if wizard.steps.prev %}
+    <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="btn btn-secondary">{% trans "Back" %}</button>
+  {% endif %}
+  <button type="submit" class="btn btn-primary">{% if wizard.steps.next %}{% trans "Next" %}{% else %}{% trans "Continue" %}{% endif %}</button>
+</div>
+{% if cancel_url and wizard.steps.current != 'auth' %}<a href="{{ cancel_url }}" class="lala-auth-cancel">{% trans "Cancel and return" %}</a>{% endif %}

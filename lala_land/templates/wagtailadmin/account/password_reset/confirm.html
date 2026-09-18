@@ -1,0 +1,21 @@
+{% extends "wagtailadmin/account/password_reset/_base.html" %}
+{% load i18n wagtailadmin_tags %}
+
+{% block titletag %}{% if validlink %}{% trans "Set your new password" %}{% else %}{% trans "Invalid password reset link" %}{% endif %}{% endblock %}
+
+{% block reset_content %}
+  {% if validlink %}
+    <h1>Choose a new password.</h1>
+    <p class="lala-login-intro">Use a strong password that you don’t use for another account.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% formattedfield form.new_password1 %}
+      {% formattedfield form.new_password2 %}
+      <footer class="form-actions"><button type="submit" class="button">{% trans "Save new password" %}</button></footer>
+    </form>
+  {% else %}
+    <h1>This link is no longer valid.</h1>
+    <div class="messages" role="status"><ul><li class="error">The reset link may have expired or already been used.</li></ul></div>
+    <div class="form-actions"><a href="{% url 'wagtailadmin_password_reset' %}" class="button">Request a new reset link</a></div>
+  {% endif %}
+{% endblock %}

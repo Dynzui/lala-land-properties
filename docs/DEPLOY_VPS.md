@@ -13,6 +13,21 @@ handles HTTPS; the application and database are reachable only inside the Compos
 - Arrange an off-server backup destination and an external uptime monitor. A VPS snapshot alone
   is not a complete recovery plan for the database and uploaded photos.
 
+## Local rehearsal
+
+Before purchasing the VPS, start Docker Desktop and run the production-stack rehearsal from a
+normal Windows PowerShell session:
+
+```powershell
+.\scripts\run-vps-rehearsal.ps1
+```
+
+The rehearsal uses a separate Compose project, database volume, media volume, generated secrets,
+and ports 8080/8443. It builds the production image, runs migrations separately, starts Caddy,
+checks Django's deployment configuration, and verifies database and media backup restoration.
+It does not read or alter the normal local-development database. The containers remain running
+afterward for inspection at `https://localhost:8443/`; a local-certificate warning is expected.
+
 ## Server setup
 
 1. Install a supported Linux LTS release, create a non-root operator with an SSH key, disable

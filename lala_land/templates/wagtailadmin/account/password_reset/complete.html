@@ -1,0 +1,13 @@
+{% extends "wagtailadmin/account/password_reset/_base.html" %}
+{% load i18n %}
+
+{% block titletag %}{% trans "Password updated" %}{% endblock %}
+
+{% block reset_content %}
+  <h1>Password updated.</h1>
+  <div class="lala-reset-status">
+    <span aria-hidden="true">✓</span>
+    <p>Your password has been changed successfully. You can now sign in with your new password.</p>
+  </div>
+  <div class="form-actions"><a href="{% url 'two_factor:login' %}" class="button">Sign in</a></div>
+{% endblock %}

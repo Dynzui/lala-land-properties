@@ -1,8 +1,18 @@
 from django.contrib import messages
+from urllib.parse import urlencode
+
 from django.shortcuts import redirect, render
+from django.urls import reverse
 
 from .forms import AcceptStaffInvitationForm
 from .services import accept_staff_invitation
+
+
+def admin_login_redirect(request):
+    """Keep two-factor authentication as the only staff login entrance."""
+    destination = request.GET.get("next") or "/admin/"
+    query = urlencode({"next": destination})
+    return redirect(f"{reverse('two_factor:login')}?{query}")
 
 
 def accept_invitation(request, token):

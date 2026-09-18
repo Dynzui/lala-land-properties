@@ -1,0 +1,32 @@
+:root{--lala-navy:#13233f;--lala-deep-navy:#0b172b;--lala-ivory:#f6f1e7;--lala-paper:#fffdf8;--lala-gold:#c39a55;--lala-ink:#172033;--lala-muted:#697080;--lala-line:#ddd5c7}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body.lala-auth{background:linear-gradient(90deg,rgba(11,23,43,.88),rgba(19,35,63,.7)),url("../images/lala-land-hero.png") center/cover fixed;color:var(--lala-ink);font-family:"DM Sans",Arial,sans-serif;line-height:1.55}
+.lala-auth-shell{display:flex;min-height:100vh;align-items:center;justify-content:flex-end;padding:clamp(1rem,5vw,5rem)}
+.lala-auth-card{width:min(100%,31rem);padding:clamp(2rem,5vw,3.75rem);border-top:4px solid var(--lala-gold);background:rgba(255,253,248,.98);box-shadow:0 2rem 5rem rgba(3,11,25,.35)}
+.lala-auth-brand{display:inline-flex;align-items:center;gap:.8rem;margin-bottom:2.5rem;color:var(--lala-navy);line-height:1;text-decoration:none}
+.lala-auth-brand img{width:48px;height:48px;border:1px solid rgba(195,154,85,.45);border-radius:50%;object-fit:cover}
+.lala-auth-brand strong{display:block;font-family:"Playfair Display",Georgia,serif;font-size:1.2rem}
+.lala-auth-brand small{display:block;margin-top:.35rem;font-size:.56rem;letter-spacing:.23em;text-transform:uppercase}
+.lala-auth-eyebrow,.lala-auth-step{margin:0 0 .65rem;color:#896b38;font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.lala-auth h1{margin:0 0 .85rem;color:var(--lala-navy);font-family:"Playfair Display",Georgia,serif;font-size:clamp(2.35rem,5vw,3.35rem);font-weight:600;line-height:1.05}
+.lala-auth-intro{margin:0 0 2rem;color:var(--lala-muted);font-size:.95rem;line-height:1.65}
+.lala-auth form>p,.lala-auth-fields>div{margin:0 0 1.25rem}
+.lala-auth label{display:block;margin-bottom:.45rem;color:var(--lala-ink);font-size:.76rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+.lala-auth input:not([type=checkbox]):not([type=radio]):not([type=hidden]),.lala-auth select{display:block;width:100%;min-height:3.2rem;padding:.8rem .9rem;border:1px solid var(--lala-line);border-radius:0;background:#fff;color:var(--lala-ink);font:inherit;box-shadow:none}
+.lala-auth input:focus,.lala-auth select:focus{border-color:var(--lala-gold);outline:2px solid rgba(195,154,85,.55);outline-offset:1px}
+.lala-auth input[type=checkbox],.lala-auth input[type=radio]{margin-right:.5rem;accent-color:var(--lala-gold)}
+.lala-auth .helptext{display:block;margin-top:.45rem;color:var(--lala-muted);font-size:.75rem}
+.lala-auth .errorlist{margin:.45rem 0;padding:0;list-style:none;color:#a43a3a;font-size:.8rem}
+.lala-auth-actions{display:flex;gap:.75rem;margin-top:1.5rem}
+.lala-auth .btn{display:inline-flex;min-height:3.15rem;align-items:center;justify-content:center;padding:.8rem 1.15rem;border:1px solid var(--lala-gold);border-radius:0;background:var(--lala-gold);color:#fff;font:600 .72rem "DM Sans",Arial,sans-serif;letter-spacing:.13em;text-decoration:none;text-transform:uppercase;cursor:pointer}
+.lala-auth .btn:hover,.lala-auth .btn:focus{border-color:#ae8140;background:#ae8140;color:#fff}
+.lala-auth .btn-primary{flex:1}.lala-auth .btn-secondary{border-color:var(--lala-line);background:transparent;color:var(--lala-navy)}
+.lala-auth .btn-secondary:hover,.lala-auth .btn-secondary:focus{border-color:var(--lala-navy);background:var(--lala-navy);color:#fff}.lala-auth .btn-block{width:100%}
+.lala-auth-cancel,.lala-auth-help-link{display:inline-block;margin-top:1rem;color:#896b38;font-size:.78rem;font-weight:600;text-decoration:none}.lala-auth-cancel:hover,.lala-auth-help-link:hover{color:var(--lala-navy)}
+.lala-auth-note{margin:2.25rem 0 0;padding-top:1.25rem;border-top:1px solid var(--lala-line);color:var(--lala-muted);font-size:.72rem;letter-spacing:.04em;text-align:center}
+.session-timeout-notice,.lala-auth-alert{margin:0 0 1.5rem;padding:1rem;border:1px solid rgba(195,154,85,.5);background:#fbf6ec;color:var(--lala-ink)}.session-timeout-notice strong{display:block;margin-bottom:.25rem}.session-timeout-notice p{margin:0}
+.lala-auth-qr{display:flex;justify-content:center;margin:1.5rem 0;padding:1rem;background:#fff}.lala-auth-qr img{width:min(100%,220px);height:auto}.lala-auth-secret{margin:0 0 1.5rem;padding:1rem;border:1px solid var(--lala-line);background:#fff}.lala-auth-secret summary{cursor:pointer;color:#896b38;font-weight:600}.lala-auth-secret code{display:block;margin-top:.7rem;overflow-wrap:anywhere;color:var(--lala-navy)}
+.lala-auth-success{display:grid;grid-template-columns:2.5rem 1fr;gap:1rem;align-items:center;margin:1.5rem 0;padding:1.25rem;border:1px solid rgba(195,154,85,.45);background:#fbf6ec}.lala-auth-success span{display:grid;width:2.5rem;height:2.5rem;place-items:center;border-radius:50%;background:var(--lala-gold);color:#fff;font-weight:700}.lala-auth-success p{margin:0;color:var(--lala-muted)}
+.lala-auth-alternative{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--lala-line)}
+@media(max-width:640px){.lala-auth-shell{align-items:flex-start;padding:1rem}.lala-auth-card{padding:2rem 1.5rem}.lala-auth-brand{margin-bottom:2rem}.lala-auth-actions{flex-direction:column-reverse}.lala-auth .btn{width:100%}}

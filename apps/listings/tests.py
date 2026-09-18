@@ -376,7 +376,10 @@ def test_public_index_includes_mobile_filter_controls(client):
     assert response.status_code == 200
     assert 'id="property-filter"' in content
     assert 'class="mobile-filter-fab"' in content
+    assert 'aria-label="Open property filters"' in content
     assert 'aria-controls="property-filter"' in content
+    assert '<svg aria-hidden="true"' in content
+    assert "</span> Filters</button>" not in content
     assert 'class="filter-close"' in content
     assert 'class="advanced-filters"' in content
     assert "Advanced filters" in content

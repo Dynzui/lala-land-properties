@@ -26,8 +26,6 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% block title %}{% trans "Login" %}{% endblock %}</h1>
-
   {% if request.GET.reason == "session-expired" %}
     <div class="session-timeout-notice" role="status">
       <strong>Your session timed out</strong>
@@ -36,21 +34,20 @@
   {% endif %}
 
   {% if wizard.steps.current == 'auth' %}
-    <p>{% blocktrans %}Enter your credentials.{% endblocktrans %}</p>
+    <h1>{% block title %}Welcome back.{% endblock %}</h1>
+    <p class="lala-auth-intro">Sign in once to continue to the administration area. If your account uses an authenticator, verification is the next step.</p>
   {% elif wizard.steps.current == 'token' %}
-    <p>{{ device|as_verbose_action }}</p>
+    <h1>Verify it’s you.</h1>
+    <p class="lala-auth-intro">{{ device|as_verbose_action }}</p>
   {% elif wizard.steps.current == 'backup' %}
-    <p>{% blocktrans trimmed %}Use this form for entering backup tokens for logging in.
-      These tokens have been generated for you to print and keep safe. Please
-      enter one of these backup tokens to login to your account.{% endblocktrans %}</p>
+    <h1>Use a backup code.</h1>
+    <p class="lala-auth-intro">Enter one of the single-use recovery codes saved when two-factor authentication was configured.</p>
   {% endif %}
 
   <form action="" method="post">
     {% block main_form_content %}
       {% csrf_token %}
       {% include "two_factor/_wizard_forms.html" %}
-
-      <input type="submit" value="" hidden>
 
       {% if other_devices %}
         <p>{% trans "Or, alternatively, use one of your other authentication methods:" %}</p>
@@ -65,13 +62,14 @@
       {% endif %}
 
       {% include "two_factor/_wizard_actions.html" %}
+      {% if wizard.steps.current == 'auth' %}<a class="lala-auth-help-link" href="{% url 'wagtailadmin_password_reset' %}">Forgot your password?</a>{% endif %}
     {% endblock %}
   </form>
 
   {% block backup_tokens %}
     {% if backup_tokens %}
       <hr>
-      <div class="backup_tokens_form">
+       <div class="backup_tokens_form lala-auth-alternative">
         <form action="" method="post">
           {% csrf_token %}
           <p>{% trans "As a last resort, you can use a backup token:" %}</p>

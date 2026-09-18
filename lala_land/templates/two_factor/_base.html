@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}Staff access{% endblock %} · Lala Land Properties</title>
+  <link rel="icon" type="image/png" href="{% static 'images/lala-land-logo-original.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/two-factor.css' %}?v=1">
+  {% block extra_media %}{% endblock %}
+</head>
+<body class="lala-auth">
+  {% block content_wrapper %}
+    <main class="lala-auth-shell">
+      <section class="{% block auth_card_class %}lala-auth-card{% endblock %}">
+        <a class="lala-auth-brand" href="/" aria-label="Lala Land Properties home">
+          <img src="{% static 'images/lala-land-logo-original.png' %}" alt="">
+          <span><strong>Lala Land</strong><small>Properties</small></span>
+        </a>
+        <p class="lala-auth-eyebrow">Secure staff access</p>
+        {% block content %}{% endblock %}
+        <p class="lala-auth-note">Protected by two-factor authentication.</p>
+      </section>
+    </main>
+  {% endblock %}
+</body>
+</html>

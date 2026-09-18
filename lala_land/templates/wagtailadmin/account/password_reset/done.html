@@ -1,0 +1,14 @@
+{% extends "wagtailadmin/account/password_reset/_base.html" %}
+{% load i18n %}
+
+{% block titletag %}{% trans "Check your email" %}{% endblock %}
+
+{% block reset_content %}
+  <h1>Check your email.</h1>
+  <div class="lala-reset-status">
+    <span aria-hidden="true">✓</span>
+    <p>A secure reset link has been sent if an account exists for that address.</p>
+  </div>
+  <p class="lala-reset-help">For security, we show the same message whether or not the email is registered. Check your spam folder if it doesn’t arrive shortly.</p>
+  <div class="form-actions"><a href="{% url 'two_factor:login' %}" class="button">Back to sign in</a></div>
+{% endblock %}

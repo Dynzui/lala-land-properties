@@ -77,3 +77,6 @@ The chosen launch path is a VPS using `compose.vps.yaml`. See
 [`docs/DEPLOY_VPS.md`](docs/DEPLOY_VPS.md) for server setup and launch checks. The earlier Render
 option remains in `render.yaml` and [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) as a fallback;
 it has not been provisioned.
+
+For a plain-language explanation of the VPS, Docker, deployment, backups, and maintenance, see
+[`docs/VPS_BEGINNER_GUIDE.md`](docs/VPS_BEGINNER_GUIDE.md).

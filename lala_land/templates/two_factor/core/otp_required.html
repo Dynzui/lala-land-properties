@@ -1,0 +1,9 @@
+{% extends "two_factor/_base_focus.html" %}
+
+{% block title %}Two-factor authentication required{% endblock %}
+
+{% block content %}
+  <h1>Protect your account first.</h1>
+  <p class="lala-auth-intro">Administration access requires two-factor authentication to help protect customer and property information.</p>
+  <a href="{% url 'two_factor:setup' %}" class="btn btn-primary btn-block">Set up two-factor authentication</a>
+{% endblock %}

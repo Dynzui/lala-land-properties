@@ -1,0 +1,28 @@
+{% extends "wagtailadmin/account/password_reset/_base.html" %}
+{% load i18n wagtailadmin_tags %}
+
+{% block titletag %}{% trans "Reset password" %}{% endblock %}
+
+{% block reset_content %}
+  <h1>Reset your password.</h1>
+  <p class="lala-login-intro">Enter the email address connected to your staff account. We’ll send you a secure reset link.</p>
+
+  {% include "wagtailadmin/shared/non_field_errors.html" %}
+  {% block above_form %}{% endblock %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% formattedfield form.email %}
+
+    {% block extra_fields %}
+      {% for field_name, field in form.extra_fields %}{% formattedfield field %}{% endfor %}
+    {% endblock extra_fields %}
+
+    <footer class="form-actions">
+      {% block submit_buttons %}<button type="submit" class="button">{% trans "Send reset link" %}</button>{% endblock %}
+    </footer>
+  </form>
+
+  {% block below_form %}{% endblock %}
+  <a class="lala-back-link" href="{% url 'two_factor:login' %}">← Back to sign in</a>
+{% endblock %}

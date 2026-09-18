@@ -1,0 +1,80 @@
+{% extends "wagtailadmin/base.html" %}{% load static %}
+{% block titletag %}Dashboard{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/cms-dashboard.css' %}?v=1">{% endblock %}
+{% block content %}
+<header class="cms-dashboard-hero">
+  <div>
+    <p class="cms-eyebrow">Lala Land workspace</p>
+    <h1>Welcome back{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}.</h1>
+    <span>Here is what needs your attention today.</span>
+  </div>
+  <a class="button button-secondary" href="/" target="_blank" rel="noopener">View public website</a>
+</header>
+
+<main class="cms-dashboard-shell">
+  <section class="cms-quick-actions" aria-labelledby="quick-actions-title">
+    <div class="cms-section-heading">
+      <div><p class="cms-eyebrow">Start here</p><h2 id="quick-actions-title">Quick actions</h2></div>
+    </div>
+    <div class="cms-action-grid">
+      {% if can_manage_listings %}<a href="{% url 'lala_guided_listing_add' %}"><span class="cms-action-icon">＋</span><strong>Add property listing</strong><small>Create a new draft in one guided form.</small></a>{% endif %}
+      {% if can_manage_inquiries %}<a href="{% url 'lala_inquiry_dashboard' %}"><span class="cms-action-icon">✉</span><strong>View inquiries</strong><small>Respond to new and active customers.</small></a>{% endif %}
+      {% if can_manage_content %}<a href="{% url 'lala_content_dashboard' %}"><span class="cms-action-icon">✎</span><strong>Edit website</strong><small>Update pages, articles, and public copy.</small></a>{% endif %}
+      {% if can_manage_listings %}<a href="{% url 'wagtailsnippets_properties_development:add' %}"><span class="cms-action-icon">⌂</span><strong>Add development</strong><small>Set up a location and development.</small></a>{% endif %}
+    </div>
+  </section>
+
+  <section class="cms-metrics" aria-label="Business overview">
+    {% if can_manage_inquiries %}
+      <a href="{% url 'lala_inquiry_dashboard' %}"><strong>{{ new_inquiry_count }}</strong><span>New inquiries</span><small>{{ unassigned_inquiry_count }} active unassigned</small></a>
+    {% endif %}
+    {% if can_manage_listings %}
+      <a href="{% url 'lala_listing_workflow' %}"><strong>{{ draft_listing_count }}</strong><span>Draft listings</span><small>Waiting for review</small></a>
+      <a href="{% url 'lala_listing_workflow' %}"><strong>{{ published_listing_count }}</strong><span>Published</span><small>Visible or retained online</small></a>
+      <a href="{% url 'lala_listing_workflow' %}"><strong>{{ available_listing_count }}</strong><span>Available</span><small>Ready for customers</small></a>
+    {% endif %}
+  </section>
+
+  <div class="cms-dashboard-columns">
+    <section class="cms-panel cms-attention-panel">
+      <div class="cms-section-heading"><div><p class="cms-eyebrow">Priority</p><h2>Needs attention</h2></div></div>
+      {% if attention_inquiries or attention_listings %}
+        <div class="cms-attention-list">
+          {% for inquiry in attention_inquiries %}
+            <a href="{% url 'lala_inquiry_detail' inquiry.pk %}">
+              <span class="cms-status cms-status-inquiry">Inquiry</span>
+              <span><strong>{{ inquiry.name }}</strong><small>{{ inquiry.property_reference }} · {{ inquiry.get_status_display }}{% if not inquiry.assigned_to_id %} · Unassigned{% endif %}</small></span>
+              <time>{{ inquiry.created_at|timesince }} ago</time>
+            </a>
+          {% endfor %}
+          {% for row in attention_listings %}
+            <a href="{{ row.url }}">
+              <span class="cms-status cms-status-listing">Draft</span>
+              <span><strong>{{ row.listing.title }}</strong><small>{{ row.reason }}</small></span>
+              <time>{{ row.listing.updated_at|timesince }} ago</time>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="cms-empty"><strong>You are all caught up.</strong><span>New inquiries and incomplete listings will appear here.</span></div>
+      {% endif %}
+    </section>
+
+    <aside class="cms-panel cms-activity-panel">
+      <div class="cms-section-heading"><div><p class="cms-eyebrow">Latest</p><h2>Recent activity</h2></div></div>
+      {% if recent_activity %}
+        <ol class="cms-activity-list">
+          {% for item in recent_activity %}<li><a href="{{ item.url }}"><strong>{{ item.title }}</strong><span>{{ item.description }}</span><time>{{ item.timestamp|timesince }} ago</time></a></li>{% endfor %}
+        </ol>
+      {% else %}
+        <div class="cms-empty"><strong>No recent activity yet.</strong><span>Your latest listing and inquiry updates will appear here.</span></div>
+      {% endif %}
+    </aside>
+  </div>
+
+  <section class="cms-secondary-links" aria-label="More tools">
+    {% if can_manage_content %}<a href="{% url 'lala_content_dashboard' %}">Website content <span>→</span></a>{% endif %}
+    {% if can_manage_staff %}<a href="{% url 'lala_staff_dashboard' %}">Staff management <span>→</span></a><a href="{% url 'lala_audit_log' %}">Full audit log <span>→</span></a>{% endif %}
+  </section>
+</main>
+{% endblock %}
