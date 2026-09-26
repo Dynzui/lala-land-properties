@@ -4,28 +4,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from wagtail.admin.auth import require_admin_access
 
-from apps.accounts.capabilities import Capability
+from apps.accounts.capabilities import Capability, require_capability
 
 from .admin_forms import GuidedListingForm
 from .models import Listing
 from .services import archive_listing, publish_listing, restore_listing
 
 
-def _require_listing_access(user):
-    if not user.has_capability(Capability.LISTING_MANAGE):
-        raise PermissionDenied
-
-
 @require_admin_access
 def listing_workflow(request):
-    _require_listing_access(request.user)
+    require_capability(request.user, Capability.LISTING_MANAGE)
     listings = Listing.objects.select_related("property", "variant").prefetch_related("offers")
     return render(request, "listings/admin/workflow.html", {"listings": listings})
 
 
 @require_admin_access
 def guided_listing_create(request):
-    _require_listing_access(request.user)
+    require_capability(request.user, Capability.LISTING_MANAGE)
     form = GuidedListingForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         listing = form.save(actor=request.user)
@@ -39,7 +34,7 @@ def guided_listing_create(request):
 
 @require_admin_access
 def guided_listing_edit(request, listing_id):
-    _require_listing_access(request.user)
+    require_capability(request.user, Capability.LISTING_MANAGE)
     listing = get_object_or_404(
         Listing.objects.select_related(
             "property__location",
@@ -66,7 +61,7 @@ def guided_listing_edit(request, listing_id):
 @require_POST
 @require_admin_access
 def listing_action(request, listing_id, action):
-    _require_listing_access(request.user)
+    require_capability(request.user, Capability.LISTING_MANAGE)
     listing = get_object_or_404(Listing, pk=listing_id)
     actions = {
         "publish": publish_listing,

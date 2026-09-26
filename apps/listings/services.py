@@ -1,30 +1,17 @@
-from datetime import date, datetime
-from decimal import Decimal
-from uuid import UUID
-
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Max
 from django.utils import timezone
 
 from apps.accounts.capabilities import Capability
 from apps.accounts.models import User
-from apps.audittrail.models import AuditEvent, CatalogRevision
+from apps.audittrail.services import record_revision, serialize_model_record
 from apps.properties.models import Development, Location, Property, Variant
 
 from .models import Listing, Offer
 
 
 def serialize_record(record) -> dict:
-    snapshot = {}
-    for field in record._meta.concrete_fields:
-        if field.name in {"id", "created_at", "updated_at"}:
-            continue
-        value = getattr(record, field.attname)
-        if isinstance(value, (UUID, Decimal, date, datetime)):
-            value = str(value)
-        snapshot[field.attname] = value
-    return snapshot
+    return serialize_model_record(record)
 
 
 @transaction.atomic
@@ -34,28 +21,13 @@ def record_listing_change(
     if not actor.has_capability(Capability.LISTING_MANAGE):
         raise PermissionDenied("Listing management requires Owner or Admin access.")
     snapshot = serialize_record(record)
-    entity_type = record._meta.label
-    latest = (
-        CatalogRevision.objects.select_for_update()
-        .filter(entity_type=entity_type, entity_id=record.pk)
-        .aggregate(number=Max("revision_number"))["number"]
-        or 0
-    )
-    revision = CatalogRevision.objects.create(
-        entity_type=entity_type,
-        entity_id=record.pk,
-        revision_number=latest + 1,
-        snapshot=snapshot,
-        created_by=actor,
-    )
-    AuditEvent.objects.create(
+    return record_revision(
         actor=actor,
+        record=record,
         action=action,
-        target_type=entity_type,
-        target_id=str(record.pk),
-        metadata={"before": before or {}, "after": snapshot, "revision_id": str(revision.pk)},
+        snapshot=snapshot,
+        before=before,
     )
-    return revision
 
 
 def validate_for_publication(listing: Listing) -> None:

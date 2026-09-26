@@ -1,24 +1,18 @@
-from django.core.exceptions import PermissionDenied
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.shortcuts import get_object_or_404, render
 from wagtail.admin.auth import require_admin_access
 
 from apps.access_requests.models import SensitiveAccessRequest
 from apps.access_requests.services import user_has_sensitive_access
-from apps.accounts.capabilities import Capability
+from apps.accounts.capabilities import Capability, require_capability
 from apps.audittrail.models import AuditEvent
 
 from .models import Inquiry, InquiryNote
 
 
-def _require_inquiry_access(user):
-    if not user.has_capability(Capability.INQUIRY_MANAGE):
-        raise PermissionDenied
-
-
 @require_admin_access
 def inquiry_dashboard(request):
-    _require_inquiry_access(request.user)
+    require_capability(request.user, Capability.INQUIRY_MANAGE)
     inquiries = Inquiry.objects.select_related("listing", "assigned_to")
     status_counts = {
         row["status"]: row["total"]
@@ -55,7 +49,7 @@ def inquiry_dashboard(request):
 
 @require_admin_access
 def inquiry_detail(request, inquiry_id):
-    _require_inquiry_access(request.user)
+    require_capability(request.user, Capability.INQUIRY_MANAGE)
     inquiry = get_object_or_404(
         Inquiry.objects.select_related("listing", "assigned_to"),
         pk=inquiry_id,

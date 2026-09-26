@@ -1,0 +1,165 @@
+:root {
+  --lala-navy: #13233f;
+  --lala-deep-navy: #0b172b;
+  --lala-ivory: #f6f1e7;
+  --lala-paper: #fffdf8;
+  --lala-gold: #c39a55;
+  --lala-ink: #172033;
+  --lala-muted: #697080;
+  --lala-line: #ddd5c7;
+}
+
+.lala-login,
+body.lala-auth {
+  min-height: 100vh;
+  background:
+    linear-gradient(90deg, rgba(11, 23, 43, .88), rgba(19, 35, 63, .7)),
+    url("../images/lala-land-hero.png") center / cover fixed;
+  color: var(--lala-ink);
+  font-family: "DM Sans", Arial, sans-serif;
+}
+
+.lala-login .content-wrapper,
+.lala-auth-card {
+  width: min(100%, 31rem);
+  padding: clamp(2rem, 5vw, 3.75rem);
+  border: 0;
+  border-top: 4px solid var(--lala-gold);
+  border-radius: 0;
+  background: rgba(255, 253, 248, .98);
+  box-shadow: 0 2rem 5rem rgba(3, 11, 25, .35);
+  color: var(--lala-ink);
+}
+
+.lala-login-brand,
+.lala-auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 2.5rem;
+  color: var(--lala-navy);
+  line-height: 1;
+  text-decoration: none;
+}
+
+.lala-login-brand img,
+.lala-auth-brand img {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(195, 154, 85, .45);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.lala-login-brand strong,
+.lala-auth-brand strong {
+  display: block;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.2rem;
+}
+
+.lala-login-brand small,
+.lala-auth-brand small {
+  display: block;
+  margin-top: .35rem;
+  font-size: .56rem;
+  letter-spacing: .23em;
+  text-transform: uppercase;
+}
+
+.lala-login .lala-login-eyebrow,
+.lala-auth-eyebrow,
+.lala-auth-step {
+  margin: 0 0 .65rem;
+  color: #896b38;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.lala-login h1,
+.lala-auth h1 {
+  margin: 0 0 .85rem;
+  color: var(--lala-navy);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(2.35rem, 5vw, 3.35rem);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.lala-login-intro,
+.lala-auth-intro {
+  color: var(--lala-muted);
+  line-height: 1.65;
+}
+
+.lala-login input[type="text"],
+.lala-login input[type="email"],
+.lala-login input[type="password"],
+.lala-auth input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+.lala-auth select {
+  border: 1px solid var(--lala-line);
+  border-radius: 0;
+  background: #fff;
+  color: var(--lala-ink);
+  font-family: "DM Sans", Arial, sans-serif;
+  box-shadow: none;
+}
+
+.lala-login input:focus,
+.lala-login input:focus-visible,
+.lala-auth input:focus,
+.lala-auth select:focus {
+  border-color: var(--lala-gold);
+  outline: 2px solid rgba(195, 154, 85, .55) !important;
+  outline-offset: 1px;
+}
+
+.lala-login .form-actions .button,
+.lala-auth .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lala-gold);
+  border-radius: 0;
+  background: var(--lala-gold);
+  color: #fff;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.lala-login .form-actions .button:hover,
+.lala-login .form-actions .button:focus,
+.lala-auth .btn:hover,
+.lala-auth .btn:focus {
+  border-color: #ae8140;
+  background: #ae8140;
+  color: #fff;
+}
+
+.lala-login-note,
+.lala-auth-note {
+  margin: 2.25rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--lala-line);
+  color: var(--lala-muted);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .lala-login .content-wrapper,
+  .lala-auth-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .lala-login-brand,
+  .lala-auth-brand {
+    margin-bottom: 2rem;
+  }
+}

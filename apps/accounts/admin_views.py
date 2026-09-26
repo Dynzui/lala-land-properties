@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from wagtail.admin.auth import require_admin_access
 
-from apps.accounts.capabilities import Capability
+from apps.accounts.capabilities import Capability, require_capability
 from apps.audittrail.models import AuditEvent
 
 from .forms import StaffInvitationForm, StaffRoleForm, StaffStatusForm
@@ -139,14 +139,9 @@ def _audit_entries(events):
     return entries
 
 
-def _require_owner(user):
-    if not user.has_capability(Capability.STAFF_MANAGE):
-        raise PermissionDenied
-
-
 @require_admin_access
 def staff_dashboard(request):
-    _require_owner(request.user)
+    require_capability(request.user, Capability.STAFF_MANAGE)
     invitation_form = StaffInvitationForm(request.POST or None)
     invitation_link = None
     if request.method == "POST" and invitation_form.is_valid():
@@ -183,7 +178,7 @@ def staff_dashboard(request):
 @require_POST
 @require_admin_access
 def staff_action(request, user_id, action):
-    _require_owner(request.user)
+    require_capability(request.user, Capability.STAFF_MANAGE)
     target = get_object_or_404(User, pk=user_id, role__in=[User.Role.ADMIN, User.Role.MAINTAINER])
     try:
         if action == "role":
@@ -210,7 +205,7 @@ def staff_action(request, user_id, action):
 @require_POST
 @require_admin_access
 def revoke_invitation(request, invitation_id):
-    _require_owner(request.user)
+    require_capability(request.user, Capability.STAFF_MANAGE)
     invitation = get_object_or_404(StaffInvitation, pk=invitation_id)
     try:
         revoke_staff_invitation(actor=request.user, invitation=invitation)
@@ -223,7 +218,7 @@ def revoke_invitation(request, invitation_id):
 
 @require_admin_access
 def audit_log(request):
-    _require_owner(request.user)
+    require_capability(request.user, Capability.STAFF_MANAGE)
     events = AuditEvent.objects.select_related("actor")[:250]
     entries = _audit_entries(events)
     return render(request, "accounts/admin/audit_log.html", {"entries": entries})

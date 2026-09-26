@@ -1,15 +1,11 @@
-from datetime import date, datetime
-from decimal import Decimal
-from uuid import UUID
-
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
-from django.db.models import Max
 from django.utils import timezone
 
 from apps.accounts.capabilities import Capability
 from apps.accounts.models import User
-from apps.audittrail.models import AuditEvent, CatalogRevision
+from apps.audittrail.models import CatalogRevision
+from apps.audittrail.services import record_revision, serialize_model_record
 
 from .models import Development, Location, Property, PropertyType, Variant
 
@@ -26,15 +22,7 @@ SYSTEM_FIELDS = {"id", "created_at", "updated_at"}
 def serialize_catalog_record(record) -> dict:
     if not isinstance(record, CATALOG_MODELS):
         raise TypeError("Unsupported catalogue model.")
-    snapshot = {}
-    for field in record._meta.concrete_fields:
-        if field.name in SYSTEM_FIELDS:
-            continue
-        value = getattr(record, field.attname)
-        if isinstance(value, (UUID, Decimal, date, datetime)):
-            value = str(value)
-        snapshot[field.attname] = value
-    return snapshot
+    return serialize_model_record(record, excluded_fields=SYSTEM_FIELDS)
 
 
 def public_audit_snapshot(snapshot: dict) -> dict:
@@ -57,33 +45,15 @@ def record_catalog_change(
     if not actor.has_capability(Capability.PROPERTY_MANAGE):
         raise PermissionDenied("Catalogue management requires Owner or Admin access.")
     snapshot = serialize_catalog_record(record)
-    entity_type = record._meta.label
-    latest = (
-        CatalogRevision.objects.select_for_update()
-        .filter(entity_type=entity_type, entity_id=record.pk)
-        .aggregate(number=Max("revision_number"))["number"]
-        or 0
-    )
-    revision = CatalogRevision.objects.create(
-        entity_type=entity_type,
-        entity_id=record.pk,
-        revision_number=latest + 1,
-        snapshot=snapshot,
-        created_by=actor,
-        change_summary=change_summary,
-    )
-    AuditEvent.objects.create(
+    return record_revision(
         actor=actor,
+        record=record,
         action=action,
-        target_type=entity_type,
-        target_id=str(record.pk),
-        metadata={
-            "before": public_audit_snapshot(before or {}),
-            "after": public_audit_snapshot(snapshot),
-            "revision_id": str(revision.pk),
-        },
+        snapshot=snapshot,
+        before=before,
+        change_summary=change_summary,
+        audit_snapshot=public_audit_snapshot,
     )
-    return revision
 
 
 @transaction.atomic

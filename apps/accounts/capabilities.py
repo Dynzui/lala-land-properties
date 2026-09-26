@@ -1,5 +1,7 @@
 from collections.abc import Mapping
 
+from django.core.exceptions import PermissionDenied
+
 from .models import User
 
 
@@ -53,3 +55,9 @@ def user_has_capability(user: User, capability: str) -> bool:
     if not user.is_authenticated or user.status != User.Status.ACTIVE:
         return False
     return capability in ROLE_CAPABILITIES.get(user.role, frozenset())
+
+
+def require_capability(user: User, capability: str) -> None:
+    """Raise a standard authorization error unless the user has the capability."""
+    if not user.has_capability(capability):
+        raise PermissionDenied
